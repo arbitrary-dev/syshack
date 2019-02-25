@@ -5,5 +5,5 @@ System Shock 2 in NCurses.
 
 ## TODO
 
-- [ ] Walking character
+- [x] Walking character
 - [ ] Walking enemy
