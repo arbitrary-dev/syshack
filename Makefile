@@ -7,7 +7,8 @@ LINK = $(CC)
 LDFLAGS = $(CFLAGS) $(LIBS)
 
 sys-hack: build/main.o
-	$(LINK) -o $@ $^ $(LDFLAGS)
+	mkdir -p bin
+	$(LINK) -o bin/$@ $^ $(LDFLAGS)
 
 build/%.o: src/%.c
 	mkdir -p build

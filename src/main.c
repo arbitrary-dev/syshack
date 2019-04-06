@@ -14,37 +14,31 @@ init(void)
   curs_set(0);
 }
 
-typedef struct Character {
+typedef struct {
+  char ch;
   int pos_x;
   int pos_y;
 } char_t;
 
 void
-move_char(char_t *c, int dx, int dy)
-{
-  int x = c->pos_x;
-  int y = c->pos_y;
+move_ch(char_t *c, int x, int y) {
+  int cx = c->pos_x + x;
+  int cy = c->pos_y + y;
 
-  wmove(stdscr, y, x);
-  waddch(stdscr, ' ');
+  if (cx < 0 || cx >= COLS || cy < 0 || cy >= LINES) {
+    beep();
+    return;
+  }
 
-  x += dx;
-  if (x < 0)
-    x = 0;
-  else if (x >= COLS)
-    x = COLS - 1;
+  move(c->pos_y, c->pos_x);
+  addch(' ');
 
-  y += dy;
-  if (y < 0)
-    y = 0;
-  else if (y >= LINES)
-    y = LINES - 1;
+  move(cy, cx);
+  addch('@');
+  refresh();
 
-  wmove(stdscr, y, x);
-  waddch(stdscr, '@');
-
-  c->pos_x = x;
-  c->pos_y = y;
+  c->pos_x = cx;
+  c->pos_y = cy;
 }
 
 int
@@ -55,12 +49,11 @@ main(int argc, char *argv[])
   bool done = FALSE;
   int ch;
 
-  char_t *player = malloc(sizeof(char_t));
-  player->pos_x = COLS / 2;
-  player->pos_y = LINES / 2;
-
-  move_char(player, 0, 0);
-  wrefresh(stdscr);
+  char_t player;
+  player.ch = '@';
+  player.pos_x = COLS / 2;
+  player.pos_y = LINES / 2;
+  move_ch(&player, 0, 0);
 
   while (!done && (ch = wgetch(stdscr)) > 0) {
     switch (ch) {
@@ -69,28 +62,24 @@ main(int argc, char *argv[])
         break;
 
       case 'h':
-        move_char(player, -1, 0);
+        move_ch(&player, -1, 0);
         break;
 
       case 'l':
-        move_char(player, 1, 0);
+        move_ch(&player, 1, 0);
         break;
 
       case 'j':
-        move_char(player, 0, 1);
+        move_ch(&player, 0, 1);
         break;
 
       case 'k':
-        move_char(player, 0, -1);
+        move_ch(&player, 0, -1);
         break;
     }
-
-    wrefresh(stdscr);
   }
 
-  free(player);
-
-  wrefresh(stdscr);
+  refresh();
   endwin();
 
   exit(0);
