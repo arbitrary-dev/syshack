@@ -40,7 +40,7 @@ is_blocked(int x, int y) {
 }
 
 void
-move_ch(char_t *c, int x, int y) {
+ch_move(char_t *c, int x, int y) {
   int cx = c->pos_x + x;
   int cy = c->pos_y + y;
 
@@ -119,14 +119,14 @@ main(int argc, char *argv[])
   player.state = PLAYER;
   player.pos_x = COLS / 2;
   player.pos_y = LINES / 2;
-  move_ch(&player, 0, 0);
+  ch_move(&player, 0, 0);
 
   char_t droid;
   droid.ch = 'd';
   droid.state = WANDER;
   droid.pos_x = COLS / 2 + 1;
   droid.pos_y = LINES / 2 + 1;
-  move_ch(&droid, 0, 0);
+  ch_move(&droid, 0, 0);
 
   int ch;
   bool done = false;
@@ -138,19 +138,19 @@ main(int argc, char *argv[])
         break;
 
       case 'h':
-        move_ch(&player, -1, 0);
+        ch_move(&player, -1, 0);
         break;
 
       case 'l':
-        move_ch(&player, 1, 0);
+        ch_move(&player, 1, 0);
         break;
 
       case 'j':
-        move_ch(&player, 0, 1);
+        ch_move(&player, 0, 1);
         break;
 
       case 'k':
-        move_ch(&player, 0, -1);
+        ch_move(&player, 0, -1);
         break;
 
       case 'a':
