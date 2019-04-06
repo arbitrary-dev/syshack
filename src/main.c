@@ -4,6 +4,12 @@
 #include <curses.h>
 #include <locale.h>
 
+typedef struct {
+  void *item;
+} cell_t;
+
+static cell_t **map = NULL;
+
 static void
 init(void)
 {
@@ -36,7 +42,10 @@ typedef struct {
 
 bool
 is_blocked(int x, int y) {
-  return x < 0 || x >= COLS || y < 0 || y >= LINES;
+  if (x < 0 || x >= COLS || y < 0 || y >= LINES)
+    return true;
+
+  return map[x][y].item != NULL;
 }
 
 void
@@ -50,7 +59,11 @@ ch_move(char_t *c, int x, int y) {
   }
 
   mvaddch(c->pos_y, c->pos_x, ' ');
+  map[c->pos_x][c->pos_y].item = NULL;
+
   mvaddch(cy, cx, c->ch);
+  map[cx][cy].item = c;
+
   refresh();
 
   c->pos_x = cx;
@@ -74,7 +87,11 @@ move_droid(char_t *d) {
     return;
 
   mvaddch(d->pos_y, d->pos_x, ' ');
+  map[d->pos_x][d->pos_y].item = NULL;
+
   mvaddch(dy, dx, d->ch);
+  map[dx][dy].item = d;
+
   refresh();
 
   d->pos_x = dx;
@@ -113,6 +130,13 @@ int
 main(int argc, char *argv[])
 {
   init();
+
+  map = malloc(COLS * sizeof(cell_t *));
+  for (int i = 0; i < COLS; ++i) {
+    map[i] = malloc(LINES * sizeof(cell_t *));
+    for (int j = 0; j < LINES; ++j)
+      map[i][j].item = NULL;
+  }
 
   char_t player;
   player.ch = '@';
