@@ -14,6 +14,9 @@ init(void)
   nonl();
   curs_set(0);
 
+  use_default_colors();
+  start_color();
+
   srand(time(NULL));
 }
 
@@ -55,6 +58,14 @@ move_ch(char_t *c, int x, int y) {
 }
 
 void
+ch_attack(char_t *c, int x, int y) {
+  init_pair(1, COLOR_WHITE, COLOR_RED);
+  attron(COLOR_PAIR(1));
+  mvaddch(c->pos_y + y, c->pos_x + x, 'x');
+  attroff(COLOR_PAIR(1));
+}
+
+void
 move_droid(char_t *d) {
   int dx = d->pos_x + rand() % 3 - 1;
   int dy = d->pos_y + rand() % 3 - 1;
@@ -68,6 +79,34 @@ move_droid(char_t *d) {
 
   d->pos_x = dx;
   d->pos_y = dy;
+}
+
+void
+do_attack(char_t *player) {
+  int px = player->pos_x;
+  int py = player->pos_y;
+
+  mvprintw(py - 1, px + 1, "Where?");
+
+  switch (getch()) {
+    case 'h':
+      ch_attack(player, -1, 0);
+      break;
+
+    case 'l':
+      ch_attack(player, 1, 0);
+      break;
+
+    case 'j':
+      ch_attack(player, 0, 1);
+      break;
+
+    case 'k':
+      ch_attack(player, 0, -1);
+      break;
+  }
+
+  mvprintw(py - 1, px + 1, "      ");
 }
 
 int
@@ -113,6 +152,9 @@ main(int argc, char *argv[])
       case 'k':
         move_ch(&player, 0, -1);
         break;
+
+      case 'a':
+        do_attack(&player);
     }
 
     move_droid(&droid);
