@@ -46,11 +46,8 @@ move_ch(char_t *c, int x, int y) {
     return;
   }
 
-  move(c->pos_y, c->pos_x);
-  addch(' ');
-
-  move(cy, cx);
-  addch(c->ch);
+  mvaddch(c->pos_y, c->pos_x, ' ');
+  mvaddch(cy, cx, c->ch);
   refresh();
 
   c->pos_x = cx;
@@ -65,11 +62,8 @@ move_droid(char_t *d) {
   if (is_blocked(dx, dy))
     return;
 
-  move(d->pos_y, d->pos_x);
-  addch(' ');
-
-  move(dy, dx);
-  addch(d->ch);
+  mvaddch(d->pos_y, d->pos_x, ' ');
+  mvaddch(dy, dx, d->ch);
   refresh();
 
   d->pos_x = dx;
@@ -80,9 +74,6 @@ int
 main(int argc, char *argv[])
 {
   init();
-
-  int ch;
-  bool done = false;
 
   char_t player;
   player.ch = '@';
@@ -98,7 +89,10 @@ main(int argc, char *argv[])
   droid.pos_y = LINES / 2 + 1;
   move_ch(&droid, 0, 0);
 
-  while (!done && (ch = wgetch(stdscr)) > 0) {
+  int ch;
+  bool done = false;
+
+  while (!done && (ch = getch()) > 0) {
     switch (ch) {
       case 'q':
         done = TRUE;
