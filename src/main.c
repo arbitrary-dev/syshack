@@ -31,8 +31,8 @@ typedef enum {
 
 typedef struct {
   char    ch;
-  int     pos_x;
-  int     pos_y;
+  int     x;
+  int     y;
   state_t state;
 } char_t;
 
@@ -76,71 +76,86 @@ is_blocked(int x, int y) {
 }
 
 void
-ch_move(char_t *c, int x, int y) {
-  int cx = c->pos_x + x;
-  int cy = c->pos_y + y;
+ch_render(char_t *c) {
+  if (c->state == DEAD)
+    attron(COLOR_PAIR(1));
+  mvaddch(c->y, c->x, c->ch);
+  if (c->state == DEAD)
+    attroff(COLOR_PAIR(1));
+}
 
-  if (is_blocked(cx, cy)) {
-    beep();
+void
+item_render(item_t *item, int x, int y) {
+  if (item == NULL)
+    mvaddch(y, x, ' ');
+  else if (item->type == ITEM)
+    mvaddch(y, x, '.');
+  else if (item->type == CHARACTER)
+    ch_render((char_t *) item->value);
+}
+
+void
+ch_move(char_t *c, int x, int y) {
+  int cx = c->x + x;
+  int cy = c->y + y;
+
+  if (is_blocked(cx, cy))
     return;
+
+  item_t *ci = map[c->x][c->y].first;
+  if (ci == NULL) {
+    ci = malloc(sizeof(item_t *));
+    ci->type = CHARACTER;
+    ci->value = c;
+  }
+  item_t *pi = NULL; // previous
+  while (ci != NULL && ci->value != c) {
+    pi = ci;
+    ci = ci->next;
   }
 
-  mvaddch(c->pos_y, c->pos_x, ' ');
-  map[c->pos_x][c->pos_y].first = NULL;
+  item_render(pi, c->x, c->y);
+  if (pi == NULL)
+    map[c->x][c->y].first = NULL;
+  else
+    pi->next = NULL;
 
-  mvaddch(cy, cx, c->ch);
-  item_t *ci = malloc(sizeof(item_t *));
-  ci->type = CHARACTER;
-  ci->value = c;
-  map[cx][cy].first = ci;
+  item_t *last = map[cx][cy].first;
+  if (last == NULL) {
+    map[cx][cy].first = ci;
+  } else {
+    while (last != NULL && last->next != NULL)
+      last = last->next;
+    last->next = ci;
+  }
+  c->x = cx;
+  c->y = cy;
+  ch_render(c);
 
   refresh();
-
-  c->pos_x = cx;
-  c->pos_y = cy;
 }
 
 void
 ch_attack(char_t *c, int x, int y) {
   init_pair(1, COLOR_WHITE, COLOR_RED);
-  int ay = c->pos_y + y;
-  int ax = c->pos_x + x;
+  int ay = c->y + y;
+  int ax = c->x + x;
   char_t *d = ctx->droid;
-  if (d->pos_x == ax && d->pos_y == ay) {
+  if (d->x == ax && d->y == ay) {
     d->state = DEAD;
-    attron(COLOR_PAIR(1));
-    mvaddch(ay, ax, 'x');
-    attroff(COLOR_PAIR(1));
+    ch_render(d);
   }
 }
 
 void
 move_droid(char_t *d) {
-  int dx = d->pos_x + rand() % 3 - 1;
-  int dy = d->pos_y + rand() % 3 - 1;
-
-  if (is_blocked(dx, dy))
-    return;
-
-  mvaddch(d->pos_y, d->pos_x, ' ');
-  map[d->pos_x][d->pos_y].first = NULL;
-
-  mvaddch(dy, dx, d->ch);
-  item_t *di = malloc(sizeof(item_t *));
-  di->type = CHARACTER;
-  di->value = d;
-  map[dx][dy].first = di;
-
-  refresh();
-
-  d->pos_x = dx;
-  d->pos_y = dy;
+  ch_move(d, rand() % 3 - 1, rand() % 3 - 1);
 }
 
 void
 do_attack(char_t *player) {
-  int px = player->pos_x;
-  int py = player->pos_y;
+  int px = player->x;
+  int py = player->y;
 
   mvprintw(py - 1, px + 1, "Where?");
   char ch = getch();
@@ -197,16 +212,16 @@ main(int argc, char *argv[])
   char_t player;
   player.ch = '@';
   player.state = PLAYER;
-  player.pos_x = COLS / 2;
-  player.pos_y = LINES / 2;
+  player.x = COLS / 2;
+  player.y = LINES / 2;
   ch_move(&player, 0, 0);
   ctx->player = &player;
 
   char_t droid;
   droid.ch = 'd';
   droid.state = WANDER;
-  droid.pos_x = COLS / 2 + 1;
-  droid.pos_y = LINES / 2 + 1;
+  droid.x = COLS / 2 + 1;
+  droid.y = LINES / 2 + 1;
   ch_move(&droid, 0, 0);
   ctx->droid = &droid;
 
