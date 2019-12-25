@@ -53,7 +53,8 @@ is_blocked(int x, int y) {
   if (x < 0 || x >= COLS || y < 0 || y >= LINES)
     return true;
 
-  return map[x][y].item != NULL;
+  char_t *i = map[x][y].item;
+  return !(i == NULL || i->state == DEAD);
 }
 
 void
