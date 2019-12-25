@@ -4,8 +4,19 @@
 #include <ncursesw/curses.h>
 #include <locale.h>
 
+typedef enum {
+  CHARACTER,
+  ITEM,
+} item_type_t;
+
+typedef struct Item {
+  item_type_t type;
+  void *value;
+  struct Item *next;
+} item_t;
+
 typedef struct {
-  void *item;
+  item_t *first;
 } cell_t;
 
 static cell_t **map = NULL;
@@ -53,8 +64,8 @@ is_blocked(int x, int y) {
   if (x < 0 || x >= COLS || y < 0 || y >= LINES)
     return true;
 
-  char_t *i = map[x][y].item;
-  return !(i == NULL || i->state == DEAD);
+  item_t *i = map[x][y].first;
+  return !(i == NULL || ((char_t *) i->value)->state == DEAD);
 }
 
 void
@@ -68,10 +79,13 @@ ch_move(char_t *c, int x, int y) {
   }
 
   mvaddch(c->pos_y, c->pos_x, ' ');
-  map[c->pos_x][c->pos_y].item = NULL;
+  map[c->pos_x][c->pos_y].first = NULL;
 
   mvaddch(cy, cx, c->ch);
-  map[cx][cy].item = c;
+  item_t *ci = malloc(sizeof(item_t *));
+  ci->type = CHARACTER;
+  ci->value = c;
+  map[cx][cy].first = ci;
 
   refresh();
 
@@ -102,10 +116,13 @@ move_droid(char_t *d) {
     return;
 
   mvaddch(d->pos_y, d->pos_x, ' ');
-  map[d->pos_x][d->pos_y].item = NULL;
+  map[d->pos_x][d->pos_y].first = NULL;
 
   mvaddch(dy, dx, d->ch);
-  map[dx][dy].item = d;
+  item_t *di = malloc(sizeof(item_t *));
+  di->type = CHARACTER;
+  di->value = d;
+  map[dx][dy].first = di;
 
   refresh();
 
@@ -167,7 +184,7 @@ main(int argc, char *argv[])
   for (int i = 0; i < COLS; ++i) {
     map[i] = malloc(LINES * sizeof(cell_t *));
     for (int j = 0; j < LINES; ++j)
-      map[i][j].item = NULL;
+      map[i][j].first = NULL;
   }
 
   char_t player;
