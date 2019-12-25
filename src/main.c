@@ -10,6 +10,20 @@ typedef struct {
 
 static cell_t **map = NULL;
 
+typedef enum {
+  PLAYER,
+  WANDER,
+  FLIGHT,
+  FIGHT,
+} state_t;
+
+typedef struct {
+  char    ch;
+  int     pos_x;
+  int     pos_y;
+  state_t state;
+} char_t;
+
 static void
 init(void)
 {
@@ -25,20 +39,6 @@ init(void)
 
   srand(time(NULL));
 }
-
-typedef enum {
-  PLAYER,
-  WANDER,
-  FLIGHT,
-  FIGHT,
-} state_t;
-
-typedef struct {
-  char    ch;
-  int     pos_x;
-  int     pos_y;
-  state_t state;
-} char_t;
 
 bool
 is_blocked(int x, int y) {
