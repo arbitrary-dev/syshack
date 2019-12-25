@@ -15,6 +15,7 @@ typedef enum {
   WANDER,
   FLIGHT,
   FIGHT,
+  DEAD,
 } state_t;
 
 typedef struct {
@@ -23,6 +24,13 @@ typedef struct {
   int     pos_y;
   state_t state;
 } char_t;
+
+typedef struct {
+  char_t *player;
+  char_t *droid;
+} context_t;
+
+static context_t *ctx = NULL;
 
 static void
 init(void)
@@ -73,9 +81,15 @@ ch_move(char_t *c, int x, int y) {
 void
 ch_attack(char_t *c, int x, int y) {
   init_pair(1, COLOR_WHITE, COLOR_RED);
-  attron(COLOR_PAIR(1));
-  mvaddch(c->pos_y + y, c->pos_x + x, 'x');
-  attroff(COLOR_PAIR(1));
+  int ay = c->pos_y + y;
+  int ax = c->pos_x + x;
+  char_t *d = ctx->droid;
+  if (d->pos_x == ax && d->pos_y == ay) {
+    d->state = DEAD;
+    attron(COLOR_PAIR(1));
+    mvaddch(ay, ax, 'x');
+    attroff(COLOR_PAIR(1));
+  }
 }
 
 void
@@ -147,6 +161,7 @@ main(int argc, char *argv[])
 {
   init();
 
+  ctx = malloc(sizeof(context_t *));
   map = malloc(COLS * sizeof(cell_t *));
   for (int i = 0; i < COLS; ++i) {
     map[i] = malloc(LINES * sizeof(cell_t *));
@@ -160,6 +175,7 @@ main(int argc, char *argv[])
   player.pos_x = COLS / 2;
   player.pos_y = LINES / 2;
   ch_move(&player, 0, 0);
+  ctx->player = &player;
 
   char_t droid;
   droid.ch = 'd';
@@ -167,6 +183,7 @@ main(int argc, char *argv[])
   droid.pos_x = COLS / 2 + 1;
   droid.pos_y = LINES / 2 + 1;
   ch_move(&droid, 0, 0);
+  ctx->droid = &droid;
 
   int ch;
   bool done = false;
