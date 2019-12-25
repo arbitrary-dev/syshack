@@ -77,8 +77,10 @@ is_blocked(int x, int y) {
 
 void
 ch_render(char_t *c) {
-  if (c->state == DEAD)
+  if (c->state == DEAD) {
+    init_pair(1, COLOR_WHITE, COLOR_RED);
     attron(COLOR_PAIR(1));
+  }
   mvaddch(c->y, c->x, c->ch);
   if (c->state == DEAD)
     attroff(COLOR_PAIR(1));
@@ -136,14 +138,23 @@ ch_move(char_t *c, int x, int y) {
 }
 
 void
+render_region(int x, int y, int w) {
+  for (int i = 0; i < w; ++i)
+    item_render(map[x + i][y].first, x + i, y);
+}
+
+void
 ch_attack(char_t *c, int x, int y) {
-  init_pair(1, COLOR_WHITE, COLOR_RED);
   int ay = c->y + y;
   int ax = c->x + x;
   char_t *d = ctx->droid;
   if (d->x == ax && d->y == ay) {
     d->state = DEAD;
     ch_render(d);
+  } else {
+    mvprintw(c->y - 1, c->x + 1, "Miss!");
+    getch();
+    render_region(c->x + 1, c->y - 1, 5);
   }
 }
 
@@ -159,7 +170,7 @@ do_attack(char_t *player) {
 
   mvprintw(py - 1, px + 1, "Where?");
   char ch = getch();
-  mvprintw(py - 1, px + 1, "      ");
+  render_region(px + 1, py - 1, 6);
 
   switch (ch) {
     case 'h':
