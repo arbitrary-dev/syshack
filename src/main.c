@@ -1,7 +1,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include <locale.h>
 
 typedef struct {

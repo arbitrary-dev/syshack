@@ -1,4 +1,4 @@
-LIBS = -lncurses
+LIBS = -lncursesw -ltinfow
 
 CC = gcc
 CFLAGS = -g -O2
