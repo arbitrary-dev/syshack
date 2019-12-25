@@ -104,8 +104,10 @@ do_attack(char_t *player) {
   int py = player->pos_y;
 
   mvprintw(py - 1, px + 1, "Where?");
+  char ch = getch();
+  mvprintw(py - 1, px + 1, "      ");
 
-  switch (getch()) {
+  switch (ch) {
     case 'h':
       ch_attack(player, -1, 0);
       break;
@@ -121,9 +123,23 @@ do_attack(char_t *player) {
     case 'k':
       ch_attack(player, 0, -1);
       break;
-  }
 
-  mvprintw(py - 1, px + 1, "      ");
+    case 'y':
+      ch_attack(player, -1, -1);
+      break;
+
+    case 'u':
+      ch_attack(player, 1, -1);
+      break;
+
+    case 'b':
+      ch_attack(player, -1, 1);
+      break;
+
+    case 'n':
+      ch_attack(player, 1, 1);
+      break;
+  }
 }
 
 int
@@ -177,11 +193,28 @@ main(int argc, char *argv[])
         ch_move(&player, 0, -1);
         break;
 
+      case 'y':
+        ch_move(&player, -1, -1);
+        break;
+
+      case 'u':
+        ch_move(&player, 1, -1);
+        break;
+
+      case 'b':
+        ch_move(&player, -1, 1);
+        break;
+
+      case 'n':
+        ch_move(&player, 1, 1);
+        break;
+
       case 'a':
         do_attack(&player);
     }
 
-    move_droid(&droid);
+    if (droid.state == WANDER)
+      move_droid(&droid);
   }
 
   refresh();
