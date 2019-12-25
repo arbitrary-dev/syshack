@@ -65,7 +65,14 @@ is_blocked(int x, int y) {
     return true;
 
   item_t *i = map[x][y].first;
-  return !(i == NULL || ((char_t *) i->value)->state == DEAD);
+
+  if (i == NULL)
+    return false;
+
+  if (i->type == CHARACTER)
+    return ((char_t *) i->value)->state != DEAD;
+
+  return false;
 }
 
 void
