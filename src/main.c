@@ -1,4 +1,5 @@
 #include <time.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -68,7 +69,7 @@ is_blocked(int x, int y) {
 
   Node *n = map[x][y].top;
 
-  if (n == NULL)
+  if (!n)
     return false;
 
   Object *o = n->value;
@@ -92,7 +93,7 @@ ch_render(Character *c) {
 void
 cell_render(size_t x, size_t y) {
   Node *n = map[x][y].top;
-  if (n == NULL) {
+  if (!n) {
     mvaddch(y, x, ' ');
     return;
   }
@@ -116,10 +117,9 @@ ch_move(Character *c, int x, int y) {
     return;
 
   Node *n = map[sx][sy].top;
-  if (n == NULL) {
-    n = malloc(sizeof(*n));
+  if (!n) {
+    n = calloc(1, sizeof(*n));
     n->value = c;
-    n->next = NULL;
   }
 
   map[sx][sy].top = n->next;
@@ -129,8 +129,6 @@ ch_move(Character *c, int x, int y) {
   c->x = tx;
   c->y = ty;
   ch_render(c);
-
-  refresh();
 }
 
 typedef struct {
@@ -149,10 +147,14 @@ render_region(const Rect *r) {
 
 void
 ctx_render_enqueued() {
-  Node *r = ctx->render_queue;
-  while (r != NULL) {
-    render_region(r->value);
-    r = r->next;
+  Node *i = ctx->render_queue;
+  while (i) {
+    Rect *rect = i->value;
+    render_region(rect);
+    free(rect);
+    Node *next = i->next;
+    free(i);
+    i = next;
   }
   ctx->render_queue = NULL;
 }
@@ -164,19 +166,19 @@ ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2) {
   rect->y1 = y1;
   rect->x2 = x2;
   rect->y2 = y2;
-  Node *new_n = malloc(sizeof(*new_n));
+  Node *new_n = calloc(1, sizeof(*new_n));
   new_n->value = rect;
-  new_n->next = NULL;
   Node *n = ctx->render_queue;
-  if (n == NULL)
-    ctx->render_queue = new_n;
-  else
+  if (n)
     l_append(new_n, n);
+  else
+    ctx->render_queue = new_n;
 }
 
 void
 render_text(size_t x, size_t y, const char *str) {
   mvprintw(y, x, str);
+  refresh();
   ctx_enqueue_rendering(x, y, x + strlen(str), y);
 }
 
@@ -190,6 +192,7 @@ ch_attack(Character *c, int x, int y) {
     ch_render(d);
   } else {
     render_text(c->x + 1, c->y - 1, "Miss!");
+    usleep(250000);
   }
 }
 
@@ -239,23 +242,22 @@ do_attack(Character *player) {
     case 'n':
       ch_attack(player, 1, 1);
       break;
+
+    default:
+      render_text(px + 1, py - 1, "What?!");
+      usleep(250000);
   }
 }
 
 int
-main(int argc, char *argv[])
-{
+main(int argc, char *argv[]) {
   init();
 
-  ctx = malloc(sizeof(*ctx));
-  ctx->render_queue = NULL;
+  ctx = calloc(1, sizeof(*ctx));
 
-  map = malloc(COLS * sizeof(Cell *));
-  for (int i = 0; i < COLS; ++i) {
-    map[i] = malloc(LINES * sizeof(Cell *));
-    for (int j = 0; j < LINES; ++j)
-      map[i][j].top = NULL;
-  }
+  map = calloc(COLS, sizeof(Cell *));
+  for (int i = 0; i < COLS; ++i)
+    map[i] = calloc(LINES, sizeof(Cell *));
 
   Character player;
   player.base.type = CHARACTER;
@@ -263,7 +265,7 @@ main(int argc, char *argv[])
   player.state = PLAYER;
   player.x = COLS / 2;
   player.y = LINES / 2;
-  ch_move(&player, 0, 0);
+  ch_render(&player);
   ctx->player = &player;
 
   Character droid;
@@ -272,15 +274,13 @@ main(int argc, char *argv[])
   droid.state = WANDER;
   droid.x = COLS / 2 + 1;
   droid.y = LINES / 2 + 1;
-  ch_move(&droid, 0, 0);
+  ch_render(&droid);
   ctx->droid = &droid;
 
   int ch;
   bool done = false;
 
   while (!done && (ch = getch()) > 0) {
-    ctx_render_enqueued();
-
     switch (ch) {
       case 'q':
         done = TRUE;
@@ -320,14 +320,23 @@ main(int argc, char *argv[])
 
       case 'a':
         do_attack(&player);
+        break;
     }
+
+    if (done)
+      break;
+
+    ctx_render_enqueued();
 
     if (droid.state == WANDER)
       move_droid(&droid);
+
+    refresh();
   }
 
+  clear();
+  mvaddstr(LINES / 2, COLS / 2 - 4, "THE END!");
   refresh();
   endwin();
-
   exit(0);
 }
