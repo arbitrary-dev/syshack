@@ -1,47 +1,49 @@
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ncursesw/curses.h>
 #include <locale.h>
 
+#include "llist.h"
+
 typedef enum {
   CHARACTER,
   ITEM,
-} item_type_t;
-
-typedef struct Item {
-  item_type_t type;
-  void *value;
-  struct Item *next;
-} item_t;
+} Type;
 
 typedef struct {
-  item_t *first;
-} cell_t;
+  Type type;
+} Object;
 
-static cell_t **map = NULL;
+typedef struct {
+  Node *top;
+} Cell;
+
+static Cell **map = NULL;
 
 typedef enum {
   PLAYER,
   WANDER,
-  FLIGHT,
-  FIGHT,
   DEAD,
-} state_t;
+} State;
 
 typedef struct {
-  char    ch;
-  int     x;
-  int     y;
-  state_t state;
-} char_t;
+  Object base;
+
+  char  symbol;
+  int   x;
+  int   y;
+  State state;
+} Character;
 
 typedef struct {
-  char_t *player;
-  char_t *droid;
-} context_t;
+  Character *player;
+  Character *droid;
+  Node *render_queue;
+} Context;
 
-static context_t *ctx = NULL;
+static Context *ctx = NULL;
 
 static void
 init(void)
@@ -64,113 +66,146 @@ is_blocked(int x, int y) {
   if (x < 0 || x >= COLS || y < 0 || y >= LINES)
     return true;
 
-  item_t *i = map[x][y].first;
+  Node *n = map[x][y].top;
 
-  if (i == NULL)
+  if (n == NULL)
     return false;
 
-  if (i->type == CHARACTER)
-    return ((char_t *) i->value)->state != DEAD;
+  Object *o = n->value;
+  if (o->type == CHARACTER)
+    return ((Character *) o)->state != DEAD;
 
   return false;
 }
 
 void
-ch_render(char_t *c) {
+ch_render(Character *c) {
   if (c->state == DEAD) {
     init_pair(1, COLOR_WHITE, COLOR_RED);
     attron(COLOR_PAIR(1));
   }
-  mvaddch(c->y, c->x, c->ch);
+  mvaddch(c->y, c->x, c->symbol);
   if (c->state == DEAD)
     attroff(COLOR_PAIR(1));
 }
 
 void
-item_render(item_t *item, int x, int y) {
-  if (item == NULL)
+cell_render(size_t x, size_t y) {
+  Node *n = map[x][y].top;
+  if (n == NULL) {
     mvaddch(y, x, ' ');
-  else if (item->type == ITEM)
+    return;
+  }
+  Object *o = n->value;
+  if (o->type == ITEM)
     mvaddch(y, x, '.');
-  else if (item->type == CHARACTER)
-    ch_render((char_t *) item->value);
+  else if (o->type == CHARACTER)
+    ch_render((Character *) o);
 }
 
 void
-ch_move(char_t *c, int x, int y) {
-  int cx = c->x + x;
-  int cy = c->y + y;
+ch_move(Character *c, int x, int y) {
+  // Source
+  int sx = c->x;
+  int sy = c->y;
+  // Target
+  int tx = sx + x;
+  int ty = sy + y;
 
-  if (is_blocked(cx, cy))
+  if (is_blocked(tx, ty))
     return;
 
-  item_t *ci = map[c->x][c->y].first;
-  if (ci == NULL) {
-    ci = malloc(sizeof(item_t *));
-    ci->type = CHARACTER;
-    ci->value = c;
-  }
-  item_t *pi = NULL; // previous
-  while (ci != NULL && ci->value != c) {
-    pi = ci;
-    ci = ci->next;
+  Node *n = map[sx][sy].top;
+  if (n == NULL) {
+    n = malloc(sizeof(*n));
+    n->value = c;
+    n->next = NULL;
   }
 
-  item_render(pi, c->x, c->y);
-  if (pi == NULL)
-    map[c->x][c->y].first = NULL;
-  else
-    pi->next = NULL;
+  map[sx][sy].top = n->next;
+  cell_render(sx, sy);
 
-  item_t *last = map[cx][cy].first;
-  if (last == NULL) {
-    map[cx][cy].first = ci;
-  } else {
-    while (last != NULL && last->next != NULL)
-      last = last->next;
-    last->next = ci;
-  }
-  c->x = cx;
-  c->y = cy;
+  map[tx][ty].top = l_prepend(n, map[tx][ty].top);
+  c->x = tx;
+  c->y = ty;
   ch_render(c);
 
   refresh();
 }
 
+typedef struct {
+  size_t x1;
+  size_t y1;
+  size_t x2;
+  size_t y2;
+} Rect;
+
 void
-render_region(int x, int y, int w) {
-  for (int i = 0; i < w; ++i)
-    item_render(map[x + i][y].first, x + i, y);
+render_region(const Rect *r) {
+  for (int j = r->y1; j <= r->y2; ++j)
+    for (int i = r->x1; i <= r->x2; ++i)
+      cell_render(i, j);
 }
 
 void
-ch_attack(char_t *c, int x, int y) {
+ctx_render_enqueued() {
+  Node *r = ctx->render_queue;
+  while (r != NULL) {
+    render_region(r->value);
+    r = r->next;
+  }
+  ctx->render_queue = NULL;
+}
+
+void
+ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2) {
+  Rect *rect = malloc(sizeof(*rect));
+  rect->x1 = x1;
+  rect->y1 = y1;
+  rect->x2 = x2;
+  rect->y2 = y2;
+  Node *new_n = malloc(sizeof(*new_n));
+  new_n->value = rect;
+  new_n->next = NULL;
+  Node *n = ctx->render_queue;
+  if (n == NULL)
+    ctx->render_queue = new_n;
+  else
+    l_append(new_n, n);
+}
+
+void
+render_text(size_t x, size_t y, const char *str) {
+  mvprintw(y, x, str);
+  ctx_enqueue_rendering(x, y, x + strlen(str), y);
+}
+
+void
+ch_attack(Character *c, int x, int y) {
   int ay = c->y + y;
   int ax = c->x + x;
-  char_t *d = ctx->droid;
+  Character *d = ctx->droid;
   if (d->x == ax && d->y == ay && d->state != DEAD) {
     d->state = DEAD;
     ch_render(d);
   } else {
-    mvprintw(c->y - 1, c->x + 1, "Miss!");
-    getch();
-    render_region(c->x + 1, c->y - 1, 5);
+    render_text(c->x + 1, c->y - 1, "Miss!");
   }
 }
 
 void
-move_droid(char_t *d) {
+move_droid(Character *d) {
   ch_move(d, rand() % 3 - 1, rand() % 3 - 1);
 }
 
 void
-do_attack(char_t *player) {
+do_attack(Character *player) {
   int px = player->x;
   int py = player->y;
 
-  mvprintw(py - 1, px + 1, "Where?");
-  char ch = getch();
-  render_region(px + 1, py - 1, 6);
+  render_text(px + 1, py - 1, "Where?");
+  int ch = getch();
+  ctx_render_enqueued();
 
   switch (ch) {
     case 'h':
@@ -212,24 +247,28 @@ main(int argc, char *argv[])
 {
   init();
 
-  ctx = malloc(sizeof(context_t *));
-  map = malloc(COLS * sizeof(cell_t *));
+  ctx = malloc(sizeof(*ctx));
+  ctx->render_queue = NULL;
+
+  map = malloc(COLS * sizeof(Cell *));
   for (int i = 0; i < COLS; ++i) {
-    map[i] = malloc(LINES * sizeof(cell_t *));
+    map[i] = malloc(LINES * sizeof(Cell *));
     for (int j = 0; j < LINES; ++j)
-      map[i][j].first = NULL;
+      map[i][j].top = NULL;
   }
 
-  char_t player;
-  player.ch = '@';
+  Character player;
+  player.base.type = CHARACTER;
+  player.symbol = '@';
   player.state = PLAYER;
   player.x = COLS / 2;
   player.y = LINES / 2;
   ch_move(&player, 0, 0);
   ctx->player = &player;
 
-  char_t droid;
-  droid.ch = 'd';
+  Character droid;
+  droid.base.type = CHARACTER;
+  droid.symbol = 'd';
   droid.state = WANDER;
   droid.x = COLS / 2 + 1;
   droid.y = LINES / 2 + 1;
@@ -240,6 +279,8 @@ main(int argc, char *argv[])
   bool done = false;
 
   while (!done && (ch = getch()) > 0) {
+    ctx_render_enqueued();
+
     switch (ch) {
       case 'q':
         done = TRUE;
