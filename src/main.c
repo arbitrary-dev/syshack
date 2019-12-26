@@ -148,7 +148,7 @@ ch_attack(char_t *c, int x, int y) {
   int ay = c->y + y;
   int ax = c->x + x;
   char_t *d = ctx->droid;
-  if (d->x == ax && d->y == ay) {
+  if (d->x == ax && d->y == ay && d->state != DEAD) {
     d->state = DEAD;
     ch_render(d);
   } else {
