@@ -191,9 +191,18 @@ ch_attack(Character *c, int x, int y) {
     if ((d->hp -= damage) <= 0) {
       d->state = DEAD;
     } else {
+      d->state = DEAD;
+      ch_render(d);
+
       char str[3];
       sprintf(str, "-%d", damage);
       render_text(c->x + 1, c->y - 1, str);
+
+      SMALL_SLEEP();
+      d->state = WANDER;
+      ch_render(d);
+      refresh();
+
       SLEEP();
     }
     ch_render(d);
