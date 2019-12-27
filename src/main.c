@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -7,6 +8,9 @@
 #include <locale.h>
 
 #include "llist.h"
+
+#define SMALL_SLEEP() usleep(100000)
+#define SLEEP() usleep(250000)
 
 typedef enum {
   CHARACTER,
@@ -32,10 +36,11 @@ typedef enum {
 typedef struct {
   Object base;
 
-  char  symbol;
-  int   x;
-  int   y;
-  State state;
+  char   symbol;
+  size_t x;
+  size_t y;
+  short  hp;
+  State  state;
 } Character;
 
 typedef struct {
@@ -109,6 +114,7 @@ ch_move(Character *c, int x, int y) {
   // Source
   int sx = c->x;
   int sy = c->y;
+
   // Target
   int tx = sx + x;
   int ty = sy + y;
@@ -117,15 +123,12 @@ ch_move(Character *c, int x, int y) {
     return;
 
   Node *n = map[sx][sy].top;
-  if (!n) {
-    n = calloc(1, sizeof(*n));
-    n->value = c;
-  }
+  assert(n);
 
   map[sx][sy].top = n->next;
   cell_render(sx, sy);
 
-  map[tx][ty].top = l_prepend(n, map[tx][ty].top);
+  map[tx][ty].top = l_prepend(map[tx][ty].top, n);
   c->x = tx;
   c->y = ty;
   ch_render(c);
@@ -168,11 +171,7 @@ ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2) {
   rect->y2 = y2;
   Node *new_n = calloc(1, sizeof(*new_n));
   new_n->value = rect;
-  Node *n = ctx->render_queue;
-  if (n)
-    l_append(new_n, n);
-  else
-    ctx->render_queue = new_n;
+  ctx->render_queue = l_append(ctx->render_queue, new_n);
 }
 
 void
@@ -187,12 +186,20 @@ ch_attack(Character *c, int x, int y) {
   int ay = c->y + y;
   int ax = c->x + x;
   Character *d = ctx->droid;
-  if (d->x == ax && d->y == ay && d->state != DEAD) {
-    d->state = DEAD;
+  int damage = 0;
+  if (d->x == ax && d->y == ay && d->state != DEAD && (damage = rand() % 5)) {
+    if ((d->hp -= damage) <= 0) {
+      d->state = DEAD;
+    } else {
+      char str[3];
+      sprintf(str, "-%d", damage);
+      render_text(c->x + 1, c->y - 1, str);
+      SLEEP();
+    }
     ch_render(d);
   } else {
     render_text(c->x + 1, c->y - 1, "Miss!");
-    usleep(250000);
+    SLEEP();
   }
 }
 
@@ -245,8 +252,27 @@ do_attack(Character *player) {
 
     default:
       render_text(px + 1, py - 1, "What?!");
-      usleep(250000);
+      SLEEP();
   }
+}
+
+static Character *
+ch_create(char symbol, uint8_t hp, State state, uint8_t x, uint8_t y) {
+  Character *c = calloc(1, sizeof(*c));
+  c->base.type = CHARACTER;
+  c->symbol = symbol;
+  c->hp = hp;
+  c->state = state;
+  c->x = x;
+  c->y = y;
+
+  Node *n = calloc(1, sizeof(*n));
+  n->value = c;
+
+  map[x][y].top = l_prepend(map[x][y].top, n);
+  ch_render(c);
+
+  return c;
 }
 
 int
@@ -259,23 +285,11 @@ main(int argc, char *argv[]) {
   for (int i = 0; i < COLS; ++i)
     map[i] = calloc(LINES, sizeof(Cell *));
 
-  Character player;
-  player.base.type = CHARACTER;
-  player.symbol = '@';
-  player.state = PLAYER;
-  player.x = COLS / 2;
-  player.y = LINES / 2;
-  ch_render(&player);
-  ctx->player = &player;
+  Character *player = ch_create('@', 15, PLAYER, COLS / 2, LINES / 2);
+  ctx->player = player;
 
-  Character droid;
-  droid.base.type = CHARACTER;
-  droid.symbol = 'd';
-  droid.state = WANDER;
-  droid.x = COLS / 2 + 1;
-  droid.y = LINES / 2 + 1;
-  ch_render(&droid);
-  ctx->droid = &droid;
+  Character *droid = ch_create('d', 15, WANDER, COLS / 2 + 1, LINES / 2 + 1);
+  ctx->droid = droid;
 
   int ch;
   bool done = false;
@@ -287,39 +301,39 @@ main(int argc, char *argv[]) {
         break;
 
       case 'h':
-        ch_move(&player, -1, 0);
+        ch_move(player, -1, 0);
         break;
 
       case 'l':
-        ch_move(&player, 1, 0);
+        ch_move(player, 1, 0);
         break;
 
       case 'j':
-        ch_move(&player, 0, 1);
+        ch_move(player, 0, 1);
         break;
 
       case 'k':
-        ch_move(&player, 0, -1);
+        ch_move(player, 0, -1);
         break;
 
       case 'y':
-        ch_move(&player, -1, -1);
+        ch_move(player, -1, -1);
         break;
 
       case 'u':
-        ch_move(&player, 1, -1);
+        ch_move(player, 1, -1);
         break;
 
       case 'b':
-        ch_move(&player, -1, 1);
+        ch_move(player, -1, 1);
         break;
 
       case 'n':
-        ch_move(&player, 1, 1);
+        ch_move(player, 1, 1);
         break;
 
       case 'a':
-        do_attack(&player);
+        do_attack(player);
         break;
     }
 
@@ -328,8 +342,8 @@ main(int argc, char *argv[]) {
 
     ctx_render_enqueued();
 
-    if (droid.state == WANDER)
-      move_droid(&droid);
+    if (droid->state == WANDER)
+      move_droid(droid);
 
     refresh();
   }
