@@ -222,7 +222,9 @@ ch_attack_side(Character *c, int dx, int dy) {
 
       char str[3];
       sprintf(str, "-%d", damage);
+      attron(COLOR_PAIR(2));
       render_text(t->x + 1, t->y - 1, str);
+      attroff(COLOR_PAIR(2));
 
       SMALL_SLEEP();
       switch (s) {
