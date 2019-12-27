@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,6 +31,8 @@ static Cell **map = NULL;
 typedef enum {
   PLAYER,
   WANDER,
+  FIGHT,
+  FLIGHT,
   DEAD,
 } State;
 
@@ -37,13 +40,14 @@ typedef struct {
   Object base;
 
   char   symbol;
-  size_t x;
-  size_t y;
-  short  hp;
+  int x;
+  int y;
+  int hp;
   State  state;
 } Character;
 
 typedef struct {
+  bool done;
   Character *player;
   Character *droid;
   Node *render_queue;
@@ -63,6 +67,9 @@ init(void)
 
   use_default_colors();
   start_color();
+
+  init_pair(1, COLOR_WHITE, COLOR_RED);
+  init_pair(2, COLOR_RED, COLOR_BLACK);
 
   srand(time(NULL));
 }
@@ -86,10 +93,8 @@ is_blocked(int x, int y) {
 
 void
 ch_render(Character *c) {
-  if (c->state == DEAD) {
-    init_pair(1, COLOR_WHITE, COLOR_RED);
+  if (c->state == DEAD)
     attron(COLOR_PAIR(1));
-  }
   mvaddch(c->y, c->x, c->symbol);
   if (c->state == DEAD)
     attroff(COLOR_PAIR(1));
@@ -110,14 +115,14 @@ cell_render(size_t x, size_t y) {
 }
 
 void
-ch_move(Character *c, int x, int y) {
+ch_move(Character *c, int dx, int dy) {
   // Source
   int sx = c->x;
   int sy = c->y;
 
   // Target
-  int tx = sx + x;
-  int ty = sy + y;
+  int tx = sx + dx;
+  int ty = sy + dy;
 
   if (is_blocked(tx, ty))
     return;
@@ -132,6 +137,13 @@ ch_move(Character *c, int x, int y) {
   c->x = tx;
   c->y = ty;
   ch_render(c);
+}
+
+void
+ch_move_towards(Character *c, Character *to) {
+  int dx = (to->x - c->x > 0) - (to->x - c->x < 0);
+  int dy = (to->y - c->y > 0) - (to->y - c->y < 0);
+  ch_move(c, dx, dy);
 }
 
 typedef struct {
@@ -182,30 +194,55 @@ render_text(size_t x, size_t y, const char *str) {
 }
 
 void
-ch_attack(Character *c, int x, int y) {
-  int ay = c->y + y;
-  int ax = c->x + x;
-  Character *d = ctx->droid;
+ch_attack_side(Character *c, int dx, int dy) {
+  int ay = c->y + dy;
+  int ax = c->x + dx;
+
+  Character *t = (map[ax][ay].top) ? map[ax][ay].top->value : NULL;
+
   int damage = 0;
-  if (d->x == ax && d->y == ay && d->state != DEAD && (damage = rand() % 5)) {
-    if ((d->hp -= damage) <= 0) {
-      d->state = DEAD;
+  if (t && t->x == ax && t->y == ay && t->state != DEAD && (damage = rand() % 5)) {
+    if ((t->hp -= damage) <= 0) {
+      bool is_player = t->state == PLAYER;
+      t->state = DEAD;
+      if (is_player) {
+        ch_render(t);
+        attron(COLOR_PAIR(2));
+        render_text(t->x + 1, t->y - 1, "WASTED!");
+        SLEEP();
+        SLEEP();
+        SLEEP();
+        SLEEP();
+        ctx->done = TRUE;
+      }
     } else {
-      d->state = DEAD;
-      ch_render(d);
+      State s = t->state;
+      t->state = DEAD;
+      ch_render(t);
 
       char str[3];
       sprintf(str, "-%d", damage);
-      render_text(c->x + 1, c->y - 1, str);
+      render_text(t->x + 1, t->y - 1, str);
 
       SMALL_SLEEP();
-      d->state = WANDER;
-      ch_render(d);
+      switch (s) {
+        case WANDER:
+        case FIGHT:
+          if (t->hp > 5)
+            t->state = FIGHT;
+          else
+            t->state = FLIGHT;
+          break;
+
+        default:
+            t->state = s;
+      }
+      ch_render(t);
       refresh();
 
       SLEEP();
     }
-    ch_render(d);
+    ch_render(t);
   } else {
     render_text(c->x + 1, c->y - 1, "Miss!");
     SLEEP();
@@ -213,8 +250,32 @@ ch_attack(Character *c, int x, int y) {
 }
 
 void
-move_droid(Character *d) {
-  ch_move(d, rand() % 3 - 1, rand() % 3 - 1);
+ch_attack_char(Character *attacker, Character *target) {
+  int dx = target->x - attacker->x;
+  int dy = target->y - attacker->y;
+  ch_attack_side(attacker, dx, dy);
+}
+
+static bool
+is_near(Character *c1, Character *c2) {
+  return abs(c1->x - c2->x) <= 1 && abs(c1->y - c2->y) <= 1;
+}
+
+void
+move_droid() {
+  Character *d = ctx->droid;
+  switch (d->state) {
+    case FIGHT: {
+      Character *p = ctx->player;
+      if (is_near(d, p))
+        ch_attack_char(d, p);
+      else
+        ch_move_towards(d, p);
+      break;
+    }
+    default:
+      ch_move(d, rand() % 3 - 1, rand() % 3 - 1);
+  }
 }
 
 void
@@ -228,35 +289,35 @@ do_attack(Character *player) {
 
   switch (ch) {
     case 'h':
-      ch_attack(player, -1, 0);
+      ch_attack_side(player, -1, 0);
       break;
 
     case 'l':
-      ch_attack(player, 1, 0);
+      ch_attack_side(player, 1, 0);
       break;
 
     case 'j':
-      ch_attack(player, 0, 1);
+      ch_attack_side(player, 0, 1);
       break;
 
     case 'k':
-      ch_attack(player, 0, -1);
+      ch_attack_side(player, 0, -1);
       break;
 
     case 'y':
-      ch_attack(player, -1, -1);
+      ch_attack_side(player, -1, -1);
       break;
 
     case 'u':
-      ch_attack(player, 1, -1);
+      ch_attack_side(player, 1, -1);
       break;
 
     case 'b':
-      ch_attack(player, -1, 1);
+      ch_attack_side(player, -1, 1);
       break;
 
     case 'n':
-      ch_attack(player, 1, 1);
+      ch_attack_side(player, 1, 1);
       break;
 
     default:
@@ -266,7 +327,7 @@ do_attack(Character *player) {
 }
 
 static Character *
-ch_create(char symbol, uint8_t hp, State state, uint8_t x, uint8_t y) {
+ch_create(char symbol, int hp, State state, int x, int y) {
   Character *c = calloc(1, sizeof(*c));
   c->base.type = CHARACTER;
   c->symbol = symbol;
@@ -301,12 +362,10 @@ main(int argc, char *argv[]) {
   ctx->droid = droid;
 
   int ch;
-  bool done = false;
-
-  while (!done && (ch = getch()) > 0) {
+  while (!ctx->done && (ch = getch()) > 0) {
     switch (ch) {
       case 'q':
-        done = TRUE;
+        ctx->done = TRUE;
         break;
 
       case 'h':
@@ -346,13 +405,13 @@ main(int argc, char *argv[]) {
         break;
     }
 
-    if (done)
+    if (ctx->done)
       break;
 
     ctx_render_enqueued();
 
-    if (droid->state == WANDER)
-      move_droid(droid);
+    if (droid->state != DEAD)
+      move_droid();
 
     refresh();
   }
