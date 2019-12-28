@@ -220,7 +220,7 @@ ch_attack_side(Character *c, int dx, int dy) {
       t->state = DEAD;
       ch_render(t);
 
-      char str[3];
+      char str[4];
       sprintf(str, "-%d", damage);
       attron(COLOR_PAIR(2));
       render_text(t->x + 1, t->y - 1, str);
@@ -243,6 +243,8 @@ ch_attack_side(Character *c, int dx, int dy) {
       refresh();
 
       SLEEP();
+      ctx_render_enqueued();
+      refresh();
     }
     ch_render(t);
   } else {

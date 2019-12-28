@@ -1,0 +1,2 @@
+#define SysHack_VERSION_MAJOR @SysHack_VERSION_MAJOR@
+#define SysHack_VERSION_MINOR @SysHack_VERSION_MINOR@
