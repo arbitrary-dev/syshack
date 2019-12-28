@@ -1,5 +1,7 @@
 /build/*
 !/build/Makefile
 
+compile_commands.json
+
 *.swp
 *.orig

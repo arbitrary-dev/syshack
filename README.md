@@ -8,10 +8,17 @@ System Shock 2 in NCurses.
 ## Build
 
 ```sh
-$ cd build
-$ cmake -DCMAKE_BUILD_TYPE=Debug ..
-$ make
-$ bin/syshack
+syshack $ cd build
+build $ cmake -DCMAKE_BUILD_TYPE=Debug ..
+buiid $ make
+buiid $ bin/syshack
+```
+
+`compile_commands.json` for use with LSP can be retrieved this way:
+
+```sh
+build $ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
+build $ mv compile_commands.json ../
 ```
 
 ## Keys
