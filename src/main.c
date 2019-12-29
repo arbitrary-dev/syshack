@@ -4,14 +4,10 @@
 #include <string.h>
 #include <time.h>
 #include <locale.h>
-#include <unistd.h>
 
 #include "ncurses.h"
 #include "llist.h"
 #include "level.h"
-
-#define SMALL_SLEEP() usleep(100000)
-#define SLEEP() usleep(250000)
 
 typedef enum {
   CHARACTER,
@@ -38,7 +34,6 @@ typedef enum {
 
 typedef struct {
   Object base;
-
   char   symbol;
   int x;
   int y;
@@ -70,6 +65,7 @@ init(void)
 
   init_pair(1, COLOR_WHITE, COLOR_RED);
   init_pair(2, COLOR_RED, COLOR_BLACK);
+  init_pair(3, COLOR_GREEN, COLOR_BLACK);
 
   srand(time(NULL));
 }
@@ -353,8 +349,17 @@ int
 main(int argc, char *argv[]) {
   init();
 
-  Level *lvl = lvl_build();
-  lvl_render(lvl);
+  /*Level *lvl = */lvl_build();
+
+  /*
+  for (int i = 0; i < 16 * 8; ++i) {
+    wchar_t str[2] = { L'\u2500' + i, L'\0' };
+    mvprintw(i / 16, (i % 16) * 8,"%ls %x", str, 0x2500 + i);
+  }
+
+  cchar_t wch = { A_NORMAL | COLOR_PAIR(2), { L'\u2534', L'\0' }};
+  mvadd_wch(LINES - 1, COLS - 1, &wch);
+  */
 
   ctx = calloc(1, sizeof(*ctx));
 
