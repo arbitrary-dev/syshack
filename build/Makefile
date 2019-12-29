@@ -123,6 +123,33 @@ syshack/fast:
 	$(MAKE) -f CMakeFiles/syshack.dir/build.make CMakeFiles/syshack.dir/build
 .PHONY : syshack/fast
 
+src/level.o: src/level.c.o
+
+.PHONY : src/level.o
+
+# target to build an object file
+src/level.c.o:
+	$(MAKE) -f CMakeFiles/syshack.dir/build.make CMakeFiles/syshack.dir/src/level.c.o
+.PHONY : src/level.c.o
+
+src/level.i: src/level.c.i
+
+.PHONY : src/level.i
+
+# target to preprocess a source file
+src/level.c.i:
+	$(MAKE) -f CMakeFiles/syshack.dir/build.make CMakeFiles/syshack.dir/src/level.c.i
+.PHONY : src/level.c.i
+
+src/level.s: src/level.c.s
+
+.PHONY : src/level.s
+
+# target to generate assembly for a file
+src/level.c.s:
+	$(MAKE) -f CMakeFiles/syshack.dir/build.make CMakeFiles/syshack.dir/src/level.c.s
+.PHONY : src/level.c.s
+
 src/llist.o: src/llist.c.o
 
 .PHONY : src/llist.o
@@ -186,6 +213,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... syshack"
 	@echo "... edit_cache"
+	@echo "... src/level.o"
+	@echo "... src/level.i"
+	@echo "... src/level.s"
 	@echo "... src/llist.o"
 	@echo "... src/llist.i"
 	@echo "... src/llist.s"

@@ -1,14 +1,14 @@
 #include <assert.h>
 #include <math.h>
-#include <time.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <ncursesw/curses.h>
+#include <time.h>
 #include <locale.h>
+#include <unistd.h>
 
+#include "ncurses.h"
 #include "llist.h"
+#include "level.h"
 
 #define SMALL_SLEEP() usleep(100000)
 #define SLEEP() usleep(250000)
@@ -352,6 +352,9 @@ ch_create(char symbol, int hp, State state, int x, int y) {
 int
 main(int argc, char *argv[]) {
   init();
+
+  Level *lvl = lvl_build();
+  lvl_render(lvl);
 
   ctx = calloc(1, sizeof(*ctx));
 
