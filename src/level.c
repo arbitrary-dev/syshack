@@ -91,7 +91,7 @@ wchar_t start, middle, end;
 // #define X(x, y, c, t, f) mvinch((y), (x)) == (c) ? (t) : (f)
 
 static void
-render_room(level, room)
+room_render(level, room)
 const Level *level;
 const Room *room;
 {
@@ -138,8 +138,83 @@ const Room *room;
   }
 }
 
-#define min(a, b) (a) < (b) ? (a) : (b)
-#define max(a, b) (a) > (b) ? (a) : (b)
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+static void
+lvl_destroy_room(level, room)
+Level *level;
+Room *room;
+{
+  if (level->rooms == room) {
+    level->rooms = room->next;
+  } else {
+    Room *prev = level->rooms;
+    while (prev && prev->next != room)
+      prev = prev->next;
+    if (prev && prev->next == room)
+      prev->next = room->next;
+  }
+  free(room->tiles);
+  room->tiles = NULL;
+  free(room);
+}
+
+static void
+merge_rooms(lvl, r1, r2)
+Level *lvl;
+Room *r1, *r2;
+{
+  attron(COLOR_PAIR(2));
+  room_render(lvl, r1);
+  room_render(lvl, r2);
+  attroff(COLOR_PAIR(2));
+  refresh();
+  SLEEP();
+
+  ROOM(r1);
+  ROOM(r2);
+  int x = min(r1x, r2x);
+  int y = min(r1y, r2y);
+  int w = max(r1x + r1w, r2x + r2w) - x;
+  int h = max(r1y + r1h, r2y + r2h) - y;
+
+  if (!r1->tiles || r1w != w || r1h != h) {
+    Tile *temp_ts = calloc(w * h, sizeof(*temp_ts));
+    for (int i = 0; i < w * h; ++i) {
+      int nx = x + i % w;
+      int ny = y + i / w;
+      Tile t = room_get_tile(r1, nx, ny);
+      temp_ts[i / w * w + i % w] = t;
+    }
+    if (r1->tiles)
+      free(r1->tiles);
+    r1->tiles = temp_ts;
+    r1->is_rect = FALSE;
+  }
+
+  r1->x = x;
+  r1->y = y;
+  r1->w = w;
+  r1->h = h;
+
+  for (int i = 0; i < w * h; ++i) {
+    int nx = x + i % w;
+    int ny = y + i / w;
+    Tile t = room_get_tile(r2, nx, ny);
+    if (t != T_EMPTY)
+      r1->tiles[i / w * w + i % w] = t;
+  }
+
+  attron(COLOR_PAIR(3));
+  room_render(lvl, r1);
+  mvprintw(y+1, x+1, "%dx%d w%d h%d", x, y, w, h);
+  attroff(COLOR_PAIR(3));
+  refresh();
+  SLEEP();
+
+  lvl_destroy_room(lvl, r2);
+}
 
 Level *
 lvl_build()
@@ -169,7 +244,7 @@ lvl_build()
     lvl->rooms = r;
     lvl->rooms_num += 1;
     mvprintw(0, 0, "Rooms created: %d", lvl->rooms_num);
-    render_room(lvl, r);
+    room_render(lvl, r);
     refresh();
     // SMALL_SLEEP();
   }
@@ -179,41 +254,61 @@ lvl_build()
   for (Room *r = lvl->rooms; r; r = r->next) {
     Room *mr = NULL;
     ROOM(r);
+
+    // Scan north
     for (
-      int ix = rx + 1, iy = ry - 1;
-      ix < rx + rw - 1 && (mr = get_room(lvl, ix, iy));
-      ix += mr ? mr->w : 1
+      int ix = rx + 1, iy = ry - 1, skip = 1;
+      ix < rx + rw - 1;
     ) {
-      attron(COLOR_PAIR(2));
-      render_room(lvl, r);
-      render_room(lvl, mr);
-      attroff(COLOR_PAIR(2));
-      refresh();
-      SLEEP();
-
-      ROOM(mr);
-      int x = min(rx, mrx);
-      int y = min(ry, mry);
-      int w = x - max(rx + rw, mrx + mrw);
-      int h = y - max(ry + rh, mry + mrh);
-      Room *neu = mk_room_rect(x, y, w, h);
-      neu->is_rect = FALSE;
-      Tile *ts = neu->tiles = calloc(w * h, sizeof(*ts));
-      for (int i = 0; i < w * h; ++i) {
-        int nx = x + i % w;
-        int ny = y + i / w;
-        Tile t = room_get_tile(r, nx, ny);
-        if (!t)
-          t = room_get_tile(mr, nx, ny);
-        ts[i / w * w + i % w] = t;
+      mr = get_room(lvl, ix, iy);
+      if (mr && mr != r) {
+        ix = mr->x + mr->w;
+        merge_rooms(lvl, r, mr);
+      } else {
+        ++ix;
       }
-      attron(COLOR_PAIR(3));
-      render_room(lvl, neu);
-      attroff(COLOR_PAIR(3));
-      refresh();
-      SLEEP();
+    }
 
-      // TODO free r & mr
+    // Scan east
+    for (
+      int ix = rx + rw, iy = ry + 1;
+      iy < ry + rh - 1;
+    ) {
+      mr = get_room(lvl, ix, iy);
+      if (mr && mr != r) {
+        iy = mr->y + mr->h;
+        merge_rooms(lvl, r, mr);
+      } else {
+        ++iy;
+      }
+    }
+
+    // Scan south
+    for (
+      int ix = rx + 1, iy = ry + rh;
+      ix < rx + rw - 1;
+    ) {
+      mr = get_room(lvl, ix, iy);
+      if (mr && mr != r) {
+        ix = mr->x + mr->w;
+        merge_rooms(lvl, r, mr);
+      } else {
+        ++ix;
+      }
+    }
+
+    // Scan west
+    for (
+      int ix = rx - 1, iy = ry + 1;
+      iy < ry + rh - 1;
+    ) {
+      mr = get_room(lvl, ix, iy);
+      if (mr && mr != r) {
+        iy = mr->y + mr->h;
+        merge_rooms(lvl, r, mr);
+      } else {
+        ++iy;
+      }
     }
   }
 
