@@ -1,7 +1,7 @@
 SysHack
 =======
 
-![v0.1](https://img.shields.io/badge/dev-v0.1-brightgreen.svg)
+[![v0.1](https://img.shields.io/badge/dev-v0.1-brightgreen.svg)](../../tree/v0.1)
 
 System Shock 2 in NCurses.
 
@@ -32,9 +32,16 @@ build $ mv compile_commands.json ../
 
 ## TODO
 
-- [x] Walking character
-- [x] Walking droid
-- [x] Ebites!
-- [ ] Level generation
-- [ ] Field of view
-- [ ] Difficulty levels
+✔ Walking character  
+✔ Walking droid  
+✔ Ebites!
+[![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)  
+・ Level generation  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- rooms  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- connect rooms  
+・ Collision detection  
+・ NPC interactions
+[![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- dialogs  
+・ Field of view  
+・ Difficulty levels
