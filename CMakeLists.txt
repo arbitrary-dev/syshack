@@ -7,7 +7,7 @@ project(
 )
 
 set(CMAKE_C_COMPILER "gcc")
-set(CMAKE_C_FLAGS_DEBUG "-Og -g -Wall")
+set(CMAKE_C_FLAGS_DEBUG "-Og -g -Wall -Wno-parentheses")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
