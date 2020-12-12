@@ -463,15 +463,11 @@ lvl_build()
       // TODO move rooms around to maximize doorable perimiter
       // TODO randomly choose a single door for each room pair
       if ((room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
-          && ((room_is_floor(r, x + 1, y) && (r2 = get_room(lvl, x - 1, y))
-               && r != r2 && room_is_floor(r2, x - 1, y))
-           || (room_is_floor(r, x - 1, y) && (r2 = get_room(lvl, x + 1, y))
-               && r != r2 && room_is_floor(r2, x + 1, y))))
-       || (room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
-         && ((room_is_floor(r, x, y + 1) && (r2 = get_room(lvl, x, y - 1))
-              && r != r2 && room_is_floor(r2, x, y - 1))
-          || (room_is_floor(r, x, y - 1) && (r2 = get_room(lvl, x, y + 1))
-              && r != r2 && room_is_floor(r2, x, y + 1))))) {
+          && (((r2 = get_room(lvl, x - 1, y)) && r != r2 && room_is_floor(r2, x - 1, y))
+            || ((r2 = get_room(lvl, x + 1, y)) && r != r2 && room_is_floor(r2, x + 1, y))))
+          || (room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
+            && (((r2 = get_room(lvl, x, y - 1)) && r != r2 && room_is_floor(r2, x, y - 1))
+              || ((r2 = get_room(lvl, x, y + 1)) && r != r2 && room_is_floor(r2, x, y + 1))))) {
         room_set_tile(r, x, y, T_DOOR);
         room_set_tile(r2, x, y, T_DOOR);
 
