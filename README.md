@@ -30,11 +30,11 @@ $ build/bin/syshack
 ✔ Ebites!
 [![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)  
 ・ Level generation  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- rooms  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- connect rooms  
-・ Collision detection  
-・ NPC interactions
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- rooms  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- connect rooms  
+・ Collision detection
 [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- dialogs  
+・ NPC interactions  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- dialogs  
 ・ Field of view  
 ・ Difficulty levels

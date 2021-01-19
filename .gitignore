@@ -2,7 +2,7 @@
 !/build/Makefile
 
 compile_commands.json
-.clangd/
+*clangd/
 
 *.sw?
 *.orig
