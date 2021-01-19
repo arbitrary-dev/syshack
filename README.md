@@ -7,12 +7,12 @@ System Shock 2 in NCurses.
 
 ## Build
 
-Will also generate `compile_commands.json` for use with LSP.
-
 ```sh
 $ ./build.sh
 $ build/bin/syshack
 ```
+
+`build.sh` also generates `compile_commands.json` for use with LSP.
 
 ## Keys
 
