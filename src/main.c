@@ -283,6 +283,7 @@ do_attack(Character *player) {
   int px = player->x;
   int py = player->y;
 
+  // FIXME out of screen
   render_text(px + 1, py - 1, "Where?");
   int ch = getch();
   ctx_render_enqueued();
@@ -431,6 +432,10 @@ main(int argc, char *argv[]) {
   clear();
   mvaddstr(LINES / 2, COLS / 2 - 4, "THE END!");
   refresh();
+  SLEEP();
+  SLEEP();
+  SLEEP();
+  SLEEP();
   endwin();
   exit(0);
 }
