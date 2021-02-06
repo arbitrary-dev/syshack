@@ -1,5 +1,4 @@
-/build/*
-!/build/Makefile
+build/
 
 compile_commands.json
 *clangd/
