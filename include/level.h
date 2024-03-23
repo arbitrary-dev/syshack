@@ -55,6 +55,7 @@ typedef struct {
 } Level;
 
 bool room_is_wall(const Room *room, int x, int y);
+bool room_is_floor(const Room *room, int x, int y);
 Room * get_room(const Level *lvl, int x, int y);
 
 Level * lvl_build();

@@ -387,9 +387,13 @@ main(int argc, char *argv[]) {
   for (int i = 0; i < COLS; ++i)
     map[i] = calloc(LINES, sizeof(Cell *));
 
+  Character *player, *droid;
+
   Level *lvl = lvl_build();
   for (Room *r = lvl->rooms; r; r = r->next) {
     ROOM(r);
+    bool last_room = !r->next;
+    bool last_floor_x, last_floor_y;
     for (int x = rx; x < rx + rw; ++x)
       for (int y = ry; y < ry + rh; ++y) {
         if (room_is_wall(r, x, y)) {
@@ -400,15 +404,29 @@ main(int argc, char *argv[]) {
           n->value = w;
 
           map[x][y].top = l_append(map[x][y].top, n);
+        } else if (room_is_floor(r, x, y)) {
+          if (rand() % 6 == 0 || last_room) {
+            if (rand() % 2 && !ctx->player) {
+              player = ch_create('@', 15, PLAYER, x, y);
+              ctx->player = player;
+            } else if (!ctx->droid) {
+              droid = ch_create('d', 15, WANDER, x, y);
+              ctx->droid = droid;
+            }
+          }
+          last_floor_x = x;
+          last_floor_y = y;
         }
       }
+
+    if (ctx->player && !ctx->droid) {
+      droid = ch_create('d', 15, WANDER, last_floor_x, last_floor_y);
+      ctx->droid = droid;
+    } else if (ctx->droid && !ctx->player) {
+      player = ch_create('@', 15, PLAYER, last_floor_x, last_floor_y);
+      ctx->player = player;
+    }
   }
-
-  Character *player = ch_create('@', 15, PLAYER, COLS / 2, LINES / 2);
-  ctx->player = player;
-
-  Character *droid = ch_create('d', 15, WANDER, COLS / 2 + 1, LINES / 2 + 1);
-  ctx->droid = droid;
 
   int ch;
   while (!ctx->done && (ch = getch()) > 0) {

@@ -70,7 +70,7 @@ int x, y;
   return NULL;
 }
 
-static bool
+bool
 room_is_floor(room, x, y)
 const Room *room;
 int x, y;
