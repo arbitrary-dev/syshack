@@ -3,8 +3,6 @@
 #include <ncursesw/curses.h>
 #include <stdio.h>
 
-// TODO review & comment
-
 static Room *
 mk_room_rect(x, y, w, h)
 int x, y, w, h;
@@ -461,7 +459,6 @@ lvl_build()
         continue;
       Room *r2;
       // TODO move rooms around to maximize doorable perimiter
-      // TODO randomly choose a single door for each room pair
       if ((room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
           && ((room_is_floor(r, x + 1, y) && (r2 = get_room(lvl, x - 1, y))
                && r != r2 && room_is_floor(r2, x - 1, y))
@@ -472,6 +469,8 @@ lvl_build()
               && r != r2 && room_is_floor(r2, x, y - 1))
           || (room_is_floor(r, x, y - 1) && (r2 = get_room(lvl, x, y + 1))
               && r != r2 && room_is_floor(r2, x, y + 1))))) {
+        // TODO remember these in an array and then pick up one
+        // or two (on a different wall) randomly.
         room_set_tile(r, x, y, T_DOOR);
         room_set_tile(r2, x, y, T_DOOR);
 

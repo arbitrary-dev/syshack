@@ -46,6 +46,7 @@ typedef struct room {
   int h;
   bool is_rect;
   Tile *tiles;
+  // TODO walls
 } Room;
 
 typedef struct {
