@@ -48,7 +48,7 @@ Tile tile;
   room->tiles[(y - roomy) * roomw + x - roomx] = tile;
 }
 
-static Room *
+Room *
 get_room(lvl, x, y)
 const Level *lvl;
 int x, y;
@@ -78,12 +78,12 @@ int x, y;
   return room_get_tile(room, x, y) == T_FLOOR;
 }
 
-static bool
+bool
 room_is_wall(room, x, y)
 const Room *room;
 int x, y;
 {
-  return room_get_tile(room, x, y) & (T_WALL | T_DOOR);
+  return room_get_tile(room, x, y) == T_WALL;
 }
 
 static bool

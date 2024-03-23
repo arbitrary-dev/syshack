@@ -12,6 +12,7 @@
 typedef enum {
   CHARACTER,
   ITEM,
+  WALL,
 } Type;
 
 typedef struct {
@@ -81,10 +82,14 @@ is_blocked(int x, int y) {
     return false;
 
   Object *o = n->value;
-  if (o->type == CHARACTER)
-    return ((Character *) o)->state != DEAD;
-
-  return false;
+  switch (o->type) {
+    case CHARACTER:
+      return ((Character *) o)->state != DEAD;
+    case WALL:
+      return true;
+    default:
+      return false;
+  }
 }
 
 void
@@ -194,58 +199,74 @@ ch_attack_side(Character *c, int dx, int dy) {
   int ay = c->y + dy;
   int ax = c->x + dx;
 
-  Character *t = (map[ax][ay].top) ? map[ax][ay].top->value : NULL;
+  Object *o = (map[ax][ay].top) ? map[ax][ay].top->value : NULL;
 
-  int damage = 0;
-  if (t && t->x == ax && t->y == ay && t->state != DEAD && (damage = rand() % 5)) {
-    if ((t->hp -= damage) <= 0) {
-      bool is_player = t->state == PLAYER;
-      t->state = DEAD;
-      if (is_player) {
+  if (!o)
+    return;
+
+  switch (o->type) {
+    case CHARACTER:
+      Character *t = o;
+      int damage = 0;
+      if (t && t->x == ax && t->y == ay && t->state != DEAD && (damage = rand() % 5)) {
+        if ((t->hp -= damage) <= 0) {
+          bool is_player = t->state == PLAYER;
+          t->state = DEAD;
+          if (is_player) {
+            ch_render(t);
+            attron(COLOR_PAIR(2));
+            render_text(t->x + 1, t->y - 1, "WASTED!");
+            SLEEP();
+            SLEEP();
+            SLEEP();
+            SLEEP();
+            ctx->done = TRUE;
+          }
+        } else {
+          State s = t->state;
+          t->state = DEAD;
+          ch_render(t);
+
+          char str[4];
+          sprintf(str, "-%d", damage);
+          attron(COLOR_PAIR(2));
+          render_text(t->x + 1, t->y - 1, str);
+          attroff(COLOR_PAIR(2));
+
+          SMALL_SLEEP();
+          switch (s) {
+            case WANDER:
+            case FIGHT:
+              if (t->hp > 5)
+                t->state = FIGHT;
+              else
+                t->state = FLIGHT;
+              break;
+
+            default:
+                t->state = s;
+          }
+          ch_render(t);
+          refresh();
+
+          SLEEP();
+          ctx_render_enqueued();
+          refresh();
+        }
         ch_render(t);
-        attron(COLOR_PAIR(2));
-        render_text(t->x + 1, t->y - 1, "WASTED!");
+      } else {
+        render_text(c->x + 1, c->y - 1, "Miss!");
         SLEEP();
-        SLEEP();
-        SLEEP();
-        SLEEP();
-        ctx->done = TRUE;
       }
-    } else {
-      State s = t->state;
-      t->state = DEAD;
-      ch_render(t);
+      break;
 
-      char str[4];
-      sprintf(str, "-%d", damage);
-      attron(COLOR_PAIR(2));
-      render_text(t->x + 1, t->y - 1, str);
-      attroff(COLOR_PAIR(2));
-
-      SMALL_SLEEP();
-      switch (s) {
-        case WANDER:
-        case FIGHT:
-          if (t->hp > 5)
-            t->state = FIGHT;
-          else
-            t->state = FLIGHT;
-          break;
-
-        default:
-            t->state = s;
-      }
-      ch_render(t);
-      refresh();
-
+    case WALL:
+      render_text(c->x + 1, c->y - 1, "The wall?");
       SLEEP();
-      ctx_render_enqueued();
-      refresh();
-    }
-    ch_render(t);
-  } else {
-    render_text(c->x + 1, c->y - 1, "Miss!");
-    SLEEP();
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -350,8 +371,6 @@ int
 main(int argc, char *argv[]) {
   init();
 
-  /*Level *lvl = */lvl_build();
-
   /*
   for (int i = 0; i < 16 * 8; ++i) {
     wchar_t str[2] = { L'\u2500' + i, L'\0' };
@@ -367,6 +386,23 @@ main(int argc, char *argv[]) {
   map = calloc(COLS, sizeof(Cell *));
   for (int i = 0; i < COLS; ++i)
     map[i] = calloc(LINES, sizeof(Cell *));
+
+  Level *lvl = lvl_build();
+  for (Room *r = lvl->rooms; r; r = r->next) {
+    ROOM(r);
+    for (int x = rx; x < rx + rw; ++x)
+      for (int y = ry; y < ry + rh; ++y) {
+        if (room_is_wall(r, x, y)) {
+          Object *w = calloc(1, sizeof(*w));
+          w->type = WALL;
+
+          Node *n = calloc(1, sizeof(*n));
+          n->value = w;
+
+          map[x][y].top = l_append(map[x][y].top, n);
+        }
+      }
+  }
 
   Character *player = ch_create('@', 15, PLAYER, COLS / 2, LINES / 2);
   ctx->player = player;

@@ -54,6 +54,9 @@ typedef struct {
   int   rooms_num;
 } Level;
 
+bool room_is_wall(const Room *room, int x, int y);
+Room * get_room(const Level *lvl, int x, int y);
+
 Level * lvl_build();
 
 #endif
