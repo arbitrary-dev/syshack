@@ -34,21 +34,17 @@ init(void)
 }
 
 bool
-is_blocked(int x, int y) {
-  if (x < 0 || x >= COLS || y < 0 || y >= LINES)
+is_blocked(const Cell *c) {
+  if (c->is_wall)
     return true;
 
-  Node *n = map[x][y].top;
-
-  if (!n)
+  if (!c->top)
     return false;
 
-  Object *o = n->value;
+  Object *o = c->top->value;
   switch (o->type) {
     case CHARACTER:
       return ((Character *) o)->state != DEAD;
-    case WALL:
-      return true;
     default:
       return false;
   }
@@ -87,21 +83,23 @@ ch_move(Character *c, int dx, int dy, bool bypass_block) {
   // Source
   int sx = c->x;
   int sy = c->y;
+  Cell *s = &map[sx][sy];
 
   // Target
   int tx = sx + dx;
   int ty = sy + dy;
+  Cell *t = &map[tx][ty];
 
-  if (is_blocked(tx, ty))
+  if (is_blocked(t))
     return;
 
-  Node *n = map[sx][sy].top;
-  assert(n);
+  Node *n = s->top; // FIXME find the actual Node containing Character c
+  s->top = n->next;
+  free(n);
 
-  map[sx][sy].top = n->next;
   cell_render(sx, sy);
 
-  map[tx][ty].top = l_prepend(map[tx][ty].top, n);
+  t->top = l_prepend(t->top, c);
   c->x = tx;
   c->y = ty;
   ch_render(c);
@@ -164,8 +162,14 @@ ch_attack_side(Character *c, int dx, int dy) {
 
   Object *o = (map[ax][ay].top) ? map[ax][ay].top->value : NULL;
 
-  if (!o)
+  if (!o) {
+    if (map[ax][ay].is_wall) {
+      render_text(c->x + 1, c->y - 1, "The wall?");
+      SLEEP();
+      SLEEP();
+    }
     return;
+  }
 
   switch (o->type) {
     case CHARACTER:
@@ -221,11 +225,6 @@ ch_attack_side(Character *c, int dx, int dy) {
         render_text(c->x + 1, c->y - 1, "Miss!");
         SLEEP();
       }
-      break;
-
-    case WALL:
-      render_text(c->x + 1, c->y - 1, "The wall?");
-      SLEEP();
       break;
 
     default:
@@ -382,13 +381,7 @@ main(int argc, char *argv[]) {
     for (int x = rx; x < rx + rw; ++x)
       for (int y = ry; y < ry + rh; ++y) {
         if (room_is_wall(r, x, y)) {
-          Object *w = calloc(1, sizeof(*w));
-          w->type = WALL;
-
-          Node *n = calloc(1, sizeof(*n));
-          n->value = w;
-
-          map[x][y].top = l_append(map[x][y].top, n);
+          map[x][y].is_wall = true;
         } else if (room_is_floor(r, x, y)) {
           if (is_last_room || rand() % 6 == 0) {
             if ((is_last_room || rand() % 2) && !player)
