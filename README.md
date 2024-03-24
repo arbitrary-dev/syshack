@@ -3,7 +3,7 @@ SysHack
 
 [![v0.1](https://img.shields.io/badge/dev-v0.1-brightgreen.svg)](../../tree/v0.1)
 
-System Shock 2 in NCurses.
+Smething like System Shock, but in NCurses.
 
 ## Build
 
@@ -26,19 +26,23 @@ $ build/bin/syshack
 
 ## TODO
 
-- [v] Walking character
-- [v] Walking droid
-- [v] Ebites!
+- [x] Walking character
+- [x] Walking droid
+- [x] Ebites!
   [![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)
+- [x] Collision detection
 - [ ] Level generation
-  - rooms merging
-  - rendering
-  - connect rooms with doors
-- [ ] Collision detection
-- [ ] Rebase on `v0.2`
+  - ~rooms merging~
+  - ~connect rooms with doors~
+  - shift & merge more
+  - stairs & ladders
+- [ ] Rendering
+  - text
   [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)
-・ NPC interactions
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- dialogs
+  - several objects per tile
+- [ ] NPC interactions
+  - dialogs
+  [![v0.3](https://img.shields.io/badge/-v0.3-lightgray.svg)](../../tree/v0.3)
 - [ ] Field of view
 - [ ] Difficulty levels
   [![v1.0](https://img.shields.io/badge/-v1.0-lightgray.svg)](../../tree/v1.0)
