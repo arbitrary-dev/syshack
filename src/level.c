@@ -1,7 +1,7 @@
+#include <stdio.h>
+
 #include "ncurses.h"
 #include "level.h"
-#include <ncursesw/curses.h>
-#include <stdio.h>
 
 static Room *
 mk_room_rect(x, y, w, h)
@@ -164,7 +164,7 @@ const int pat, x, y;
 
 #define CHK_PATTERN(pat) room_pattern(room, pat, x, y)
 
-static void
+void
 room_render(room)
 const Room *room;
 {
@@ -237,7 +237,7 @@ const Room *room;
                      CHK_PATTERN(0x0840) || CHK_PATTERN(0x0802)) {
             ch = W_V;
           } else {
-            ch = WALLS[rand() % 11];
+            ch = WALLS[rand() % 11]; // FIXME pick one and persist
           }
           break;
         }
@@ -285,7 +285,7 @@ Room *r1, *r2;
   room_render(r2);
   attroff(COLOR_PAIR(2));
   refresh();
-  SMALL_SLEEP();
+  //SMALL_SLEEP();
 
   ROOM(r1);
   ROOM(r2);
@@ -347,7 +347,7 @@ Room *r1, *r2;
   //mvprintw(y+1, x+1, "%dx%d w%d h%d", x, y, w, h);
   attroff(COLOR_PAIR(3));
   refresh();
-  SMALL_SLEEP();
+  //SMALL_SLEEP();
 
   lvl_destroy_room(lvl, r2);
   lvl->rooms_num -= 1;

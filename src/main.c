@@ -99,6 +99,12 @@ ch_move(Character *c, int dx, int dy, bool bypass_block) {
 
   cell_render(sx, sy);
 
+  if (c == ctx->player && t->room && t->room != ctx->current_room) {
+    ctx->current_room = t->room;
+    // FIXME dead corpse gets overriden
+    room_render(t->room);
+  }
+
   t->top = l_prepend(t->top, c);
   c->x = tx;
   c->y = ty;
