@@ -3,7 +3,7 @@ SysHack
 
 [![v0.1](https://img.shields.io/badge/dev-v0.1-brightgreen.svg)](../../tree/v0.1)
 
-Smething like System Shock, but in NCurses.
+Something like System Shock, but in NCurses.
 
 ## Build
 
