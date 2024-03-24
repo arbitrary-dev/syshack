@@ -39,7 +39,7 @@ typedef enum {
 } Tile;
 
 typedef struct room {
-  struct room *next;
+  struct room *next; // TODO llist? :'D
   int x;
   int y;
   int w;

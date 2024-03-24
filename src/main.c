@@ -163,16 +163,14 @@ render_region(const Rect *r) {
 
 void
 ctx_render_enqueued() {
-  Node *i = ctx->render_queue;
-  while (i) {
+  Node *i;
+  while (i = ctx->render_queue) {
     Rect *rect = i->value;
     render_region(rect);
     free(rect);
-    Node *next = i->next;
+    ctx->render_queue = i->next;
     free(i);
-    i = next;
   }
-  ctx->render_queue = NULL;
 }
 
 void
@@ -182,9 +180,7 @@ ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2) {
   rect->y1 = y1;
   rect->x2 = x2;
   rect->y2 = y2;
-  Node *new_n = calloc(1, sizeof(*new_n));
-  new_n->value = rect;
-  ctx->render_queue = l_append(ctx->render_queue, new_n);
+  ctx->render_queue = l_append(ctx->render_queue, rect);
 }
 
 void
