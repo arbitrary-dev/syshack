@@ -70,6 +70,8 @@ ch_render(Character *c) {
 
 void
 cell_render(size_t x, size_t y) {
+  if (x < 0 || y < 0 || x >= COLS || y >= LINES)
+    return;
   Node *n = map[x][y].top;
   if (!n) {
     mvaddch(y, x, ' ');
@@ -92,11 +94,13 @@ ch_move(Character *c, int dx, int dy, bool bypass_block) {
   // Source
   int sx = c->x;
   int sy = c->y;
+  assert(sx >= 0 && sy >= 0 && sx < COLS && sy < LINES);
   Cell *s = &map[sx][sy];
 
   // Target
   int tx = sx + dx;
   int ty = sy + dy;
+  assert(tx >= 0 && ty >= 0 && tx < COLS && ty < LINES);
   Cell *t = &map[tx][ty];
 
   // TODO remove bypass
@@ -175,6 +179,9 @@ static void
 ch_attack_side(Character *c, int dx, int dy) {
   int ay = c->y + dy;
   int ax = c->x + dx;
+
+  if (ax < 0 || ay < 0 || ax >= COLS || ay >= LINES)
+    return;
 
   Object *o = (map[ax][ay].top) ? map[ax][ay].top->value : NULL;
 
@@ -396,6 +403,7 @@ main(int argc, char *argv[]) {
     bool is_last_room = !r->next;
     for (int x = rx; x < rx + rw; ++x)
       for (int y = ry; y < ry + rh; ++y) {
+        assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
         if (room_is_wall(r, x, y)) {
           map[x][y].is_wall = true;
         } else if (room_is_floor(r, x, y)) {
