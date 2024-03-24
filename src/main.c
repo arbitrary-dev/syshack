@@ -29,6 +29,7 @@ init(void)
   init_pair(1, COLOR_WHITE, COLOR_RED);
   init_pair(2, COLOR_RED, COLOR_BLACK);
   init_pair(3, COLOR_GREEN, COLOR_BLACK);
+  init_pair(4, COLOR_BLACK, COLOR_GREEN);
 
   srand(time(NULL));
 }
@@ -52,11 +53,18 @@ is_blocked(const Cell *c) {
 
 void
 ch_render(Character *c) {
-  if (c->state == DEAD)
-    attron(COLOR_PAIR(1));
+  switch (c->state) {
+    case DEAD:
+      attron(COLOR_PAIR(1));
+      break;
+    case HIGHLIGHT:
+      attron(COLOR_PAIR(4));
+      break;
+    default:
+      break;
+  }
   mvaddch(c->y, c->x, c->symbol);
-  if (c->state == DEAD)
-    attroff(COLOR_PAIR(1));
+  attroff(A_COLOR);
 }
 
 void
@@ -402,6 +410,21 @@ main(int argc, char *argv[]) {
 
   assert(player);
   assert(droid);
+
+  // Indicate player
+  refresh();
+  SLEEP();
+  SLEEP();
+  for (int i = 0; i < 14; ++i) {
+    if (i % 2)
+      player->state = PLAYER;
+    else
+      player->state = HIGHLIGHT;
+    ch_render(player);
+    refresh();
+    SLEEP();
+    SLEEP();
+  }
 
   int ch;
   while (!ctx->done && (ch = getch()) > 0) {
