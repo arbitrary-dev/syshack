@@ -35,6 +35,8 @@ $ build/bin/syshack
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- rendering  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- connect rooms with doors  
 ・ Collision detection
+・ Rebase on `v0.2`
+・ Resolve git-shelf
 [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- walls  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- doors  
