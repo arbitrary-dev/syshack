@@ -26,22 +26,20 @@ $ build/bin/syshack
 
 ## TODO
 
-✔ Walking character  
-✔ Walking droid  
-✔ Ebites!
-[![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)  
-・ Level generation  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- rooms merging  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- rendering  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- connect rooms with doors  
-・ Collision detection
-・ Rebase on `v0.2`
-・ Resolve git-shelf
-[![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- walls  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- doors  
-・ NPC interactions  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- dialogs  
-・ Field of view  
-・ Difficulty levels  
-・ Unit tests with [Check](https://github.com/libcheck/check)
+- [v] Walking character
+- [v] Walking droid
+- [v] Ebites!
+  [![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)
+- [ ] Level generation
+  - rooms merging
+  - rendering
+  - connect rooms with doors
+- [ ] Collision detection
+- [ ] Rebase on `v0.2`
+  [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)
+・ NPC interactions
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- dialogs
+- [ ] Field of view
+- [ ] Difficulty levels
+  [![v1.0](https://img.shields.io/badge/-v1.0-lightgray.svg)](../../tree/v1.0)
+- [ ] Unit tests with [Check](https://github.com/libcheck/check)
