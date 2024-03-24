@@ -5,50 +5,12 @@
 #include <time.h>
 #include <locale.h>
 
+#include "main.h"
+#include "misc.h"
 #include "ncurses.h"
-#include "llist.h"
 #include "level.h"
 
-typedef enum {
-  CHARACTER,
-  ITEM,
-  WALL,
-} Type;
-
-typedef struct {
-  Type type;
-} Object;
-
-typedef struct {
-  Node *top;
-} Cell;
-
 static Cell **map = NULL;
-
-typedef enum {
-  PLAYER,
-  WANDER,
-  FIGHT,
-  FLIGHT,
-  DEAD,
-} State;
-
-typedef struct {
-  Object base;
-  char   symbol;
-  int x;
-  int y;
-  int hp;
-  State  state;
-} Character;
-
-typedef struct {
-  bool done;
-  Character *player;
-  Character *droid;
-  Node *render_queue;
-} Context;
-
 static Context *ctx = NULL;
 
 static void
@@ -108,15 +70,20 @@ cell_render(size_t x, size_t y) {
     mvaddch(y, x, ' ');
     return;
   }
+
   Object *o = n->value;
-  if (o->type == ITEM)
-    mvaddch(y, x, '.');
-  else if (o->type == CHARACTER)
-    ch_render((Character *) o);
+  switch (o->type) {
+    case ITEM:
+      mvaddch(y, x, '.');
+      break;
+    case CHARACTER:
+      ch_render((Character *) o);
+      break;
+  }
 }
 
-void
-ch_move(Character *c, int dx, int dy) {
+static void
+ch_move(Character *c, int dx, int dy, bool bypass_block) {
   // Source
   int sx = c->x;
   int sy = c->y;
@@ -140,7 +107,7 @@ ch_move(Character *c, int dx, int dy) {
   ch_render(c);
 }
 
-void
+static void
 ch_move_towards(Character *c, Character *to) {
   int dx = (to->x - c->x > 0) - (to->x - c->x < 0);
   int dy = (to->y - c->y > 0) - (to->y - c->y < 0);
@@ -190,7 +157,7 @@ render_text(size_t x, size_t y, const char *str) {
   ctx_enqueue_rendering(x, y, x + strlen(str), y);
 }
 
-void
+static void
 ch_attack_side(Character *c, int dx, int dy) {
   int ay = c->y + dy;
   int ax = c->x + dx;
@@ -202,7 +169,7 @@ ch_attack_side(Character *c, int dx, int dy) {
 
   switch (o->type) {
     case CHARACTER:
-      Character *t = o;
+      Character *t = (Character *) o;
       int damage = 0;
       if (t && t->x == ax && t->y == ay && t->state != DEAD && (damage = rand() % 5)) {
         if ((t->hp -= damage) <= 0) {
@@ -266,7 +233,7 @@ ch_attack_side(Character *c, int dx, int dy) {
   }
 }
 
-void
+static void
 ch_attack_char(Character *attacker, Character *target) {
   int dx = target->x - attacker->x;
   int dy = target->y - attacker->y;
@@ -345,22 +312,37 @@ do_attack(Character *player) {
 }
 
 static Character *
-ch_create(char symbol, int hp, State state, int x, int y) {
-  Character *c = calloc(1, sizeof(*c));
-  c->base.type = CHARACTER;
-  c->symbol = symbol;
-  c->hp = hp;
-  c->state = state;
-  c->x = x;
-  c->y = y;
+make_player(room, x, y)
+Room *room;
+int x, y;
+{
+  assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
 
-  Node *n = calloc(1, sizeof(*n));
-  n->value = c;
+  Character *ch = ch_create('@', 15, PLAYER, x, y);
+  Cell *c = &map[x][y];
+  c->top = l_prepend(c->top, ch);
+  ch_render(ch);
 
-  map[x][y].top = l_prepend(map[x][y].top, n);
-  ch_render(c);
+  ctx->player = ch;
+  ctx->current_room = room;
 
-  return c;
+  return ch;
+}
+
+static Character *
+make_droid(x, y)
+int x, y;
+{
+  assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
+
+  Character *ch = ch_create('d', 15, WANDER, x, y);
+  Cell *c = &map[x][y];
+  c->top = l_prepend(c->top, ch);
+  ch_render(ch);
+
+  ctx->droid = ch;
+
+  return ch;
 }
 
 int
@@ -388,8 +370,7 @@ main(int argc, char *argv[]) {
   Level *lvl = lvl_build();
   for (Room *r = lvl->rooms; r; r = r->next) {
     ROOM(r);
-    bool last_room = !r->next;
-    bool last_floor_x, last_floor_y;
+    bool is_last_room = !r->next;
     for (int x = rx; x < rx + rw; ++x)
       for (int y = ry; y < ry + rh; ++y) {
         if (room_is_wall(r, x, y)) {
@@ -401,28 +382,19 @@ main(int argc, char *argv[]) {
 
           map[x][y].top = l_append(map[x][y].top, n);
         } else if (room_is_floor(r, x, y)) {
-          if (rand() % 6 == 0 || last_room) {
-            if (rand() % 2 && !ctx->player) {
-              player = ch_create('@', 15, PLAYER, x, y);
-              ctx->player = player;
-            } else if (!ctx->droid) {
-              droid = ch_create('d', 15, WANDER, x, y);
-              ctx->droid = droid;
-            }
+          if (is_last_room || rand() % 6 == 0) {
+            if ((is_last_room || rand() % 2) && !player)
+              player = make_player(r, x, y);
+            else if (!droid)
+              droid = make_droid(x, y);
           }
-          last_floor_x = x;
-          last_floor_y = y;
+          map[x][y].room = r;
         }
       }
-
-    if (ctx->player && !ctx->droid) {
-      droid = ch_create('d', 15, WANDER, last_floor_x, last_floor_y);
-      ctx->droid = droid;
-    } else if (ctx->droid && !ctx->player) {
-      player = ch_create('@', 15, PLAYER, last_floor_x, last_floor_y);
-      ctx->player = player;
-    }
   }
+
+  assert(player);
+  assert(droid);
 
   int ch;
   while (!ctx->done && (ch = getch()) > 0) {
