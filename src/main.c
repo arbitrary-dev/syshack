@@ -385,7 +385,7 @@ main(int argc, char *argv[]) {
 
   map = calloc(COLS, sizeof(Cell *));
   for (int i = 0; i < COLS; ++i)
-    map[i] = calloc(LINES, sizeof(Cell *));
+    map[i] = calloc(LINES, sizeof(Cell));
 
   Character *player, *droid;
 
