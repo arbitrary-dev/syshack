@@ -9,7 +9,6 @@ typedef enum {
   FIGHT,
   FLIGHT,
   DEAD,
-  HIGHLIGHT,
 } State;
 
 typedef struct {

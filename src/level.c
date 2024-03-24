@@ -473,10 +473,10 @@ lvl_build()
         room_set_tile(r, x, y, T_DOOR);
         room_set_tile(r2, x, y, T_DOOR);
 
-        room_render(r);
         room_render(r2);
       }
     }
+    room_render(r);
   }
   refresh();
 

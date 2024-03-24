@@ -30,7 +30,6 @@ init(void)
   init_pair(1, COLOR_WHITE, COLOR_RED);
   init_pair(2, COLOR_RED, COLOR_BLACK);
   init_pair(3, COLOR_GREEN, COLOR_BLACK);
-  init_pair(4, COLOR_BLACK, COLOR_GREEN);
 
   srand(time(NULL));
 }
@@ -58,14 +57,17 @@ ch_render(Character *c) {
     case DEAD:
       attron(COLOR_PAIR(1));
       break;
-    case HIGHLIGHT:
-      attron(COLOR_PAIR(4));
-      break;
     default:
       break;
   }
   mvaddch(c->y, c->x, c->symbol);
-  attroff(A_COLOR);
+  switch (c->state) {
+    case DEAD:
+      attroff(COLOR_PAIR(1));
+      break;
+    default:
+      break;
+  }
 }
 
 void
@@ -421,17 +423,20 @@ main(int argc, char *argv[]) {
   assert(player);
   assert(droid);
 
-  // Indicate player
+  // Indicate current location
   refresh();
   SLEEP();
   SLEEP();
-  for (int i = 0; i < 14; ++i) {
+  SLEEP();
+  for (int i = 1; i <= 6; ++i) {
     if (i % 2)
-      player->state = PLAYER;
-    else
-      player->state = HIGHLIGHT;
+      attron(COLOR_PAIR(3) | A_REVERSE);
+    room_render(ctx->current_room);
     ch_render(player);
+    ch_render(droid);
+    attroff(A_COLOR | A_REVERSE);
     refresh();
+    SLEEP();
     SLEEP();
     SLEEP();
   }
