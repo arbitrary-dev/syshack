@@ -18,6 +18,7 @@ init(void)
 {
   setlocale(LC_ALL, "");
   initscr();
+  keypad(stdscr, TRUE); // interpret special keys, like KEY_UP
   cbreak();
   noecho();
   nonl();
@@ -98,7 +99,8 @@ ch_move(Character *c, int dx, int dy, bool bypass_block) {
   int ty = sy + dy;
   Cell *t = &map[tx][ty];
 
-  if (is_blocked(t))
+  // TODO remove bypass
+  if (!bypass_block && is_blocked(t))
     return;
 
   Node *n = s->top; // FIXME find the actual Node containing Character c
@@ -123,7 +125,7 @@ static void
 ch_move_towards(Character *c, Character *to) {
   int dx = (to->x - c->x > 0) - (to->x - c->x < 0);
   int dy = (to->y - c->y > 0) - (to->y - c->y < 0);
-  ch_move(c, dx, dy);
+  ch_move(c, dx, dy, false);
 }
 
 typedef struct {
@@ -271,7 +273,7 @@ move_droid() {
       break;
     }
     default:
-      ch_move(d, rand() % 3 - 1, rand() % 3 - 1);
+      ch_move(d, rand() % 3 - 1, rand() % 3 - 1, false);
   }
 }
 
@@ -434,35 +436,43 @@ main(int argc, char *argv[]) {
         break;
 
       case 'h':
-        ch_move(player, -1, 0);
+      case 'H':
+      case KEY_LEFT:
+        ch_move(player, -1, 0, ch == 'H');
         break;
 
       case 'l':
-        ch_move(player, 1, 0);
+      case 'L':
+      case KEY_RIGHT:
+        ch_move(player, 1, 0, ch == 'L');
         break;
 
       case 'j':
-        ch_move(player, 0, 1);
+      case 'J':
+      case KEY_DOWN:
+        ch_move(player, 0, 1, ch == 'J');
         break;
 
       case 'k':
-        ch_move(player, 0, -1);
+      case 'K':
+      case KEY_UP:
+        ch_move(player, 0, -1, ch == 'K');
         break;
 
       case 'y':
-        ch_move(player, -1, -1);
+        ch_move(player, -1, -1, false);
         break;
 
       case 'u':
-        ch_move(player, 1, -1);
+        ch_move(player, 1, -1, false);
         break;
 
       case 'b':
-        ch_move(player, -1, 1);
+        ch_move(player, -1, 1, false);
         break;
 
       case 'n':
-        ch_move(player, 1, 1);
+        ch_move(player, 1, 1, false);
         break;
 
       case 'a':
