@@ -142,7 +142,7 @@ ctx_render_enqueued() {
 
 void
 ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2) {
-  Rect *rect = malloc(sizeof(*rect));
+  Rect *rect = malloc(sizeof(Rect));
   rect->x1 = x1;
   rect->y1 = y1;
   rect->x2 = x2;
@@ -359,13 +359,21 @@ main(int argc, char *argv[]) {
   mvadd_wch(LINES - 1, COLS - 1, &wch);
   */
 
-  ctx = calloc(1, sizeof(*ctx));
+  ctx = malloc(sizeof(Context));
+  ctx->done = false;
+  ctx->player = NULL;
+  ctx->droid = NULL;
+  ctx->current_room = NULL;
+  ctx->render_queue = NULL;
 
   map = calloc(COLS, sizeof(Cell *));
-  for (int i = 0; i < COLS; ++i)
+  for (int i = 0; i < COLS; ++i) {
     map[i] = calloc(LINES, sizeof(Cell));
+    for (int j = 0; j < LINES; ++j)
+      map[i][j] = (Cell) { false, NULL, NULL };
+  }
 
-  Character *player, *droid;
+  Character *player = NULL, *droid = NULL;
 
   Level *lvl = lvl_build();
   for (Room *r = lvl->rooms; r; r = r->next) {

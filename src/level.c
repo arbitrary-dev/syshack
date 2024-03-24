@@ -356,7 +356,7 @@ Room *r1, *r2;
 Level *
 lvl_build()
 {
-  Level *lvl = calloc(1, sizeof(*lvl));
+  Level *lvl = malloc(sizeof(Level));
   int failed_attempts = 0;
 
   // Create random rooms
