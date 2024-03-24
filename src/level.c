@@ -165,8 +165,7 @@ const int pat, x, y;
 #define CHK_PATTERN(pat) room_pattern(room, pat, x, y)
 
 static void
-room_render(level, room)
-const Level *level;
+room_render(room)
 const Room *room;
 {
   ROOM(room);
@@ -282,8 +281,8 @@ Level *lvl;
 Room *r1, *r2;
 {
   attron(COLOR_PAIR(2));
-  room_render(lvl, r1);
-  room_render(lvl, r2);
+  room_render(r1);
+  room_render(r2);
   attroff(COLOR_PAIR(2));
   refresh();
   SMALL_SLEEP();
@@ -344,7 +343,7 @@ Room *r1, *r2;
   }
 
   attron(COLOR_PAIR(3));
-  room_render(lvl, r1);
+  room_render(r1);
   //mvprintw(y+1, x+1, "%dx%d w%d h%d", x, y, w, h);
   attroff(COLOR_PAIR(3));
   refresh();
@@ -381,7 +380,7 @@ lvl_build()
     lvl->rooms = r;
     lvl->rooms_num += 1;
     mvprintw(0, 0, "Rooms created: %d", lvl->rooms_num);
-    room_render(lvl, r);
+    room_render(r);
     refresh();
     // SMALL_SLEEP();
   }
@@ -474,8 +473,8 @@ lvl_build()
         room_set_tile(r, x, y, T_DOOR);
         room_set_tile(r2, x, y, T_DOOR);
 
-        room_render(lvl, r);
-        room_render(lvl, r2);
+        room_render(r);
+        room_render(r2);
       }
     }
   }
