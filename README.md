@@ -1,7 +1,7 @@
 SysHack
 =======
 
-[![v0.1](https://img.shields.io/badge/dev-v0.1-brightgreen.svg)](../../tree/v0.1)
+[![v0.2](https://img.shields.io/badge/dev-v0.2-lightgray.svg)](../../tree/v0.2)
 
 Something like System Shock, but in NCurses.
 
