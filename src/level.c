@@ -460,6 +460,7 @@ lvl_build()
 		}
 		room_render(r);
 	}
+
 	refresh();
 
 	return lvl;

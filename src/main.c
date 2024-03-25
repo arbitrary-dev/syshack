@@ -29,6 +29,7 @@ init(void)
 	init_pair(1, COLOR_WHITE, COLOR_RED);
 	init_pair(2, COLOR_RED, COLOR_BLACK);
 	init_pair(3, COLOR_GREEN, COLOR_BLACK);
+	init_pair(4, COLOR_BLACK, COLOR_BLACK);
 
 	srand(time(NULL));
 }
@@ -124,7 +125,12 @@ ch_move(Character *c, int dx, int dy, bool bypass_block)
 	cell_render(sx, sy);
 
 	if (c == ctx->player && t->room && t->room != ctx->current_room) {
+		attron(COLOR_PAIR(4) | A_BOLD);
+		room_render(ctx->current_room);
+		attroff(COLOR_PAIR(4) | A_BOLD);
+
 		ctx->current_room = t->room;
+
 		// FIXME dead corpse gets overriden
 		room_render(t->room);
 	}
@@ -482,6 +488,16 @@ main(int argc, char *argv[])
 		SLEEP();
 		SLEEP();
 	}
+
+	attron(COLOR_PAIR(4) | A_BOLD);
+	for (Room *r = lvl->rooms; r; r = r->next) {
+		room_render(r);
+	}
+	attroff(COLOR_PAIR(4) | A_BOLD);
+
+	room_render(ctx->current_room);
+	ch_render(player);
+	ch_render(droid);
 
 	int ch;
 	while (!ctx->done && (ch = getch()) > 0) {
