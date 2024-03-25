@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -198,6 +197,7 @@ ch_attack_side(Character *c, int dx, int dy) {
 
   switch (o->type) {
     case CHARACTER:
+      {
       Character *t = (Character *) o;
       int damage = 0;
       if (t && t->x == ax && t->y == ay && t->state != DEAD && (damage = rand() % 5)) {
@@ -249,6 +249,7 @@ ch_attack_side(Character *c, int dx, int dy) {
       } else {
         render_text(c->x + 1, c->y - 1, "Miss!");
         SLEEP();
+      }
       }
       break;
 
@@ -336,9 +337,7 @@ do_attack(Character *player) {
 }
 
 static Character *
-make_player(room, x, y)
-Room *room;
-int x, y;
+make_player(Room *room, int x, int y)
 {
   assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
 
@@ -354,8 +353,7 @@ int x, y;
 }
 
 static Character *
-make_droid(x, y)
-int x, y;
+make_droid(int x, int y)
 {
   assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
 

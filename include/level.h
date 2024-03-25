@@ -2,7 +2,6 @@
 #define LEVEL_H
 
 #include <stdbool.h>
-#include <stdlib.h>
 
 // Walls
 

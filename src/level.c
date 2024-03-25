@@ -1,11 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ncurses.h"
 #include "level.h"
 
 static Room *
-mk_room_rect(x, y, w, h)
-int x, y, w, h;
+mk_room_rect(int x, int y, int w, int h)
 {
   Room *r = calloc(1, sizeof(*r));
   r->x = x;
@@ -17,9 +17,7 @@ int x, y, w, h;
 }
 
 static Tile
-room_get_tile(room, x, y)
-const Room *room;
-int x, y;
+room_get_tile(const Room *room, int x, int y)
 {
   ROOM(room);
   if (x < roomx || x >= roomx + roomw ||
@@ -34,10 +32,7 @@ int x, y;
 }
 
 static void
-room_set_tile(room, x, y, tile)
-Room *room;
-int x, y;
-Tile tile;
+room_set_tile(Room *room, int x, int y, Tile tile)
 {
   ROOM(room);
   if (x < roomx || x >= roomx + roomw ||
@@ -49,9 +44,7 @@ Tile tile;
 }
 
 Room *
-get_room(lvl, x, y)
-const Level *lvl;
-int x, y;
+get_room(const Level *lvl, int x, int y)
 {
   if (x < 0 || x >= COLS ||
       y < 0 || y >= LINES)
@@ -71,25 +64,19 @@ int x, y;
 }
 
 bool
-room_is_floor(room, x, y)
-const Room *room;
-int x, y;
+room_is_floor(const Room *room, int x, int y)
 {
   return room_get_tile(room, x, y) == T_FLOOR;
 }
 
 bool
-room_is_wall(room, x, y)
-const Room *room;
-int x, y;
+room_is_wall(const Room *room, int x, int y)
 {
   return room_get_tile(room, x, y) == T_WALL;
 }
 
 static bool
-is_floor(lvl, x, y)
-const Level *lvl;
-int x, y;
+is_floor(const Level *lvl, int x, int y)
 {
   Room *r = get_room(lvl, x, y);
   if (!r)
@@ -98,9 +85,7 @@ int x, y;
 }
 
 static void
-render_row(x, y, w, start, middle, end)
-int x, y, w;
-wchar_t start, middle, end;
+render_row(int x, int y, int w, wchar_t start, wchar_t middle, wchar_t end)
 {
   move(y, x);
   wchar_t row[w + 1];
@@ -119,9 +104,7 @@ wchar_t start, middle, end;
 }
 
 static bool
-cell_pattern(room, i, pat, x, y)
-const Room *room;
-const int i, pat, x, y;
+cell_pattern(const Room *room, int i, int pat, int x, int y)
 {
   Tile t = room_get_tile(room, x, y);
   if (pat & (1 << i) && !(t & (T_WALL | T_DOOR)))
@@ -146,9 +129,7 @@ const int i, pat, x, y;
  *    S           S
  */
 static bool
-room_pattern(room, pat, x, y)
-const Room *room;
-const int pat, x, y;
+room_pattern(const Room *room, int pat, int x, int y)
 {
   return
     CHK(1, x    , y + 1) &&
@@ -165,8 +146,7 @@ const int pat, x, y;
 #define CHK_PATTERN(pat) room_pattern(room, pat, x, y)
 
 void
-room_render(room)
-const Room *room;
+room_render(const Room *room)
 {
   ROOM(room);
   if (!room->tiles) {
@@ -257,9 +237,7 @@ const Room *room;
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 static void
-lvl_destroy_room(level, room)
-Level *level;
-Room *room;
+lvl_destroy_room(Level *level, Room *room)
 {
   if (level->rooms == room) {
     level->rooms = room->next;
@@ -276,9 +254,7 @@ Room *room;
 }
 
 static void
-merge_rooms(lvl, r1, r2)
-Level *lvl;
-Room *r1, *r2;
+merge_rooms(Level *lvl, Room *r1, Room *r2)
 {
   attron(COLOR_PAIR(2));
   room_render(r1);
