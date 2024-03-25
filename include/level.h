@@ -19,8 +19,8 @@
 #define W_W L'\u2524'
 #define W_X L'\u253C'
 
-static const int WALLS[11] =
-  { W_H, W_V, W_NW, W_NE, W_SW, W_SE, W_N, W_E, W_S, W_W, W_X };
+static const int WALLS[11]
+	= { W_H, W_V, W_NW, W_NE, W_SW, W_SE, W_N, W_E, W_S, W_W, W_X };
 
 // Doors
 #define D_H L'\u2501'
@@ -31,33 +31,43 @@ static const int WALLS[11] =
 #define ROOM(r) int r##x = (r)->x, r##y = (r)->y, r##w = (r)->w, r##h = (r)->h
 
 typedef enum {
-  T_EMPTY = 0,
-  T_FLOOR = 1,
-  T_WALL = 1 << 1,
-  T_DOOR = 1 << 2,
+	T_EMPTY = 0,
+	T_FLOOR = 1,
+	T_WALL  = 1 << 1,
+	T_DOOR  = 1 << 2,
 } Tile;
 
 typedef struct room {
-  struct room *next; // TODO llist? :'D
-  int x;
-  int y;
-  int w;
-  int h;
-  bool is_rect;
-  Tile *tiles;
-  // TODO walls
+	struct room *next;
+
+	int x;
+	int y;
+	int w;
+	int h;
+
+	bool  is_rect;
+	Tile *tiles;
+	// TODO walls
 } Room;
 
 typedef struct {
-  Room *rooms;
-  int   rooms_num;
+	Room *rooms;
+	int   rooms_num;
 } Level;
 
-void room_render(const Room *room);
-bool room_is_wall(const Room *room, int x, int y);
-bool room_is_floor(const Room *room, int x, int y);
-Room * get_room(const Level *lvl, int x, int y);
+void
+room_render(const Room *room);
 
-Level * lvl_build();
+bool
+room_is_wall(const Room *room, int x, int y);
+
+bool
+room_is_floor(const Room *room, int x, int y);
+
+Room *
+get_room(const Level *lvl, int x, int y);
+
+Level *
+lvl_build();
 
 #endif

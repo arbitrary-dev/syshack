@@ -1,0 +1,26 @@
+# Linux kernel style, kinda.
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html#examples
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+IndentCaseLabels: false
+UseTab: AlignWithSpaces
+TabWidth: 4
+
+# Clang 19
+#BreakAfterReturnType: AllDefinitions
+AlwaysBreakAfterReturnType: All
+BreakBeforeBraces: Linux
+BreakBeforeBinaryOperators: true
+
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignOperands: AlignAfterOperator
+
+AllowShortIfStatementsOnASingleLine: false
+
+SpaceAfterCStyleCast: true
+SpaceBeforeCpp11BracedList: true
+Cpp11BracedListStyle: false
+
+InsertBraces: true

@@ -2,12 +2,12 @@
 #define MISC_H
 
 typedef enum {
-  CHARACTER,
-  ITEM,
+	CHARACTER,
+	ITEM,
 } Type;
 
 typedef struct {
-  Type type;
+	Type type;
 } Object;
 
 #endif

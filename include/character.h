@@ -4,22 +4,23 @@
 #include "misc.h"
 
 typedef enum {
-  PLAYER,
-  WANDER,
-  FIGHT,
-  FLIGHT,
-  DEAD,
+	PLAYER,
+	WANDER,
+	FIGHT,
+	FLIGHT,
+	DEAD,
 } State;
 
 typedef struct {
-  Object base;
-  char   symbol;
-  int x;
-  int y;
-  int hp;
-  State  state;
+	Object base;
+	char   symbol;
+	int    x;
+	int    y;
+	int    hp;
+	State  state;
 } Character;
 
-Character * ch_create(char, int, State, int, int);
+Character *
+ch_create(char, int, State, int, int);
 
 #endif
