@@ -338,18 +338,22 @@ do_attack(Character *player)
 
 	switch (ch) {
 	case 'h':
+	case KEY_LEFT:
 		ch_attack_side(player, -1, 0);
 		break;
 
 	case 'l':
+	case KEY_RIGHT:
 		ch_attack_side(player, 1, 0);
 		break;
 
 	case 'j':
+	case KEY_DOWN:
 		ch_attack_side(player, 0, 1);
 		break;
 
 	case 'k':
+	case KEY_UP:
 		ch_attack_side(player, 0, -1);
 		break;
 
