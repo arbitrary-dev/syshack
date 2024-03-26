@@ -218,16 +218,16 @@ room_render(const Room *room)
 					ch = W_NE;
 				} else if (CHK_PATTERN(0x0A50) || CHK_PATTERN(0x8050)) {
 					ch = W_SE;
-					// clang-format off
+				// clang-format off
 				} else if (CHK_PATTERN(0x4010) || CHK_PATTERN(0x4008)
 				        || CHK_PATTERN(0x0210) || CHK_PATTERN(0x0208))
 				{
 					ch = W_H;
 				} else if (CHK_PATTERN(0x1040) || CHK_PATTERN(0x1002)
 				        || CHK_PATTERN(0x0840) || CHK_PATTERN(0x0802))
+				// clang-format on
 				{
 					ch = W_V;
-					// clang-format on
 				} else {
 					ch = WALLS[rand() % 11]; // FIXME pick one and persist
 				}
