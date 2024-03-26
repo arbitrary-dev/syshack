@@ -7,12 +7,15 @@
 static Room *
 mk_room_rect(int x, int y, int w, int h)
 {
-	Room *r    = calloc(1, sizeof(*r));
-	r->x       = x;
-	r->y       = y;
-	r->w       = w;
-	r->h       = h;
+	Room *r = calloc(1, sizeof(*r));
+
+	r->x = x;
+	r->y = y;
+	r->w = w;
+	r->h = h;
+
 	r->is_rect = TRUE;
+
 	return r;
 }
 
@@ -136,7 +139,7 @@ room_pattern(const Room *room, int pat, int x, int y)
 {
 	// clang-format off
 	return CHK(7, x - 1, y - 1) && CHK(6, x, y - 1) && CHK(5, x + 1, y - 1)
-	    && CHK(4, x - 1, y    )                     && CHK(3, x + 1, y    )
+	    && CHK(4, x - 1, y    ) /*       :P      */ && CHK(3, x + 1, y    )
 	    && CHK(2, x - 1, y + 1) && CHK(1, x, y + 1) && CHK(0, x + 1, y + 1);
 	// clang-format on
 }
@@ -180,15 +183,19 @@ room_render(const Room *room)
 				break;
 
 			case T_DOOR:
+				// clang-format off
 				if (room_is_wall(room, x - 1, y)
-				    && room_is_wall(room, x + 1, y)) {
+				 && room_is_wall(room, x + 1, y))
+				// clang-format on
+				{
 					ch = D_H;
 				} else {
 					ch = D_V;
 				}
 				break;
 
-			case T_WALL: {
+			case T_WALL:
+			{
 				if (CHK_PATTERN(0x815A) || CHK_PATTERN(0x245A)) {
 					ch = W_X;
 				} else if (CHK_PATTERN(0x8258) || CHK_PATTERN(0x2258)) {
@@ -213,10 +220,12 @@ room_render(const Room *room)
 					ch = W_SE;
 					// clang-format off
 				} else if (CHK_PATTERN(0x4010) || CHK_PATTERN(0x4008)
-				        || CHK_PATTERN(0x0210) || CHK_PATTERN(0x0208)) {
+				        || CHK_PATTERN(0x0210) || CHK_PATTERN(0x0208))
+				{
 					ch = W_H;
 				} else if (CHK_PATTERN(0x1040) || CHK_PATTERN(0x1002)
-				        || CHK_PATTERN(0x0840) || CHK_PATTERN(0x0802)) {
+				        || CHK_PATTERN(0x0840) || CHK_PATTERN(0x0802))
+				{
 					ch = W_V;
 					// clang-format on
 				} else {
@@ -435,21 +444,32 @@ lvl_build()
 			}
 			Room *r2;
 			// TODO move rooms around to maximize doorable perimiter
-			if ((room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
-			     && ((room_is_floor(r, x + 1, y)
-			          && (r2 = get_room(lvl, x - 1, y)) && r != r2
-			          && room_is_floor(r2, x - 1, y))
-			         || (room_is_floor(r, x - 1, y)
-			             && (r2 = get_room(lvl, x + 1, y)) && r != r2
-			             && room_is_floor(r2, x + 1, y))))
-			    || (room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
-			        && ((room_is_floor(r, x, y + 1)
-			             && (r2 = get_room(lvl, x, y - 1)) && r != r2
-			             && room_is_floor(r2, x, y - 1))
-			            || (room_is_floor(r, x, y - 1)
-			                && (r2 = get_room(lvl, x, y + 1)) && r != r2
-			                && room_is_floor(r2, x, y + 1))))) {
-
+			// clang-format off
+			if ((
+				room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
+				&& ((
+					room_is_floor(r, x + 1, y)
+					&& (r2 = get_room(lvl, x - 1, y)) && r != r2
+					&& room_is_floor(r2, x - 1, y)
+				) || (
+					room_is_floor(r, x - 1, y)
+					&& (r2 = get_room(lvl, x + 1, y)) && r != r2
+					&& room_is_floor(r2, x + 1, y)
+				))
+			) || (
+				room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
+				&& ((
+					room_is_floor(r, x, y + 1)
+					&& (r2 = get_room(lvl, x, y - 1)) && r != r2
+					&& room_is_floor(r2, x, y - 1)
+				) || (
+					room_is_floor(r, x, y - 1)
+					&& (r2 = get_room(lvl, x, y + 1)) && r != r2
+					&& room_is_floor(r2, x, y + 1)
+				))
+			))
+			// clang-format on
+			{
 				// TODO remember these in an array and then pick up one
 				// or two (on a different wall) randomly.
 				room_set_tile(r, x, y, T_DOOR);

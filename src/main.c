@@ -222,14 +222,16 @@ ch_attack_side(Character *c, int dx, int dy)
 	}
 
 	switch (o->type) {
-	case CHARACTER: {
+	case CHARACTER:
+	{
 		// TODO refactor to a function
 		Character *t = (Character *) o;
 
 		int damage = 0;
 
 		if (t && t->x == ax && t->y == ay && t->state != DEAD
-		    && (damage = rand() % 5)) {
+		    && (damage = rand() % 5))
+		{
 
 			if ((t->hp -= damage) <= 0) {
 				bool is_player = t->state == PLAYER;
@@ -311,7 +313,8 @@ move_droid()
 {
 	Character *d = ctx->droid;
 	switch (d->state) {
-	case FIGHT: {
+	case FIGHT:
+	{
 		Character *p = ctx->player;
 		if (is_near(d, p)) {
 			ch_attack_char(d, p);

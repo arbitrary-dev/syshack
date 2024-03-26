@@ -1,7 +1,8 @@
 #ifndef MISC_H
 #define MISC_H
 
-typedef enum {
+typedef enum
+{
 	CHARACTER,
 	ITEM,
 } Type;

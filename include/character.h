@@ -3,7 +3,8 @@
 
 #include "misc.h"
 
-typedef enum {
+typedef enum
+{
 	PLAYER,
 	WANDER,
 	FIGHT,

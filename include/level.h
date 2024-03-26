@@ -30,7 +30,8 @@ static const int WALLS[11]
 
 #define ROOM(r) int r##x = (r)->x, r##y = (r)->y, r##w = (r)->w, r##h = (r)->h
 
-typedef enum {
+typedef enum
+{
 	T_EMPTY = 0,
 	T_FLOOR = 1,
 	T_WALL  = 1 << 1,
