@@ -434,7 +434,8 @@ main(int argc, char *argv[])
 	   mvadd_wch(LINES - 1, COLS - 1, &wch);
 	   */
 
-	ctx               = malloc(sizeof(Context));
+	ctx = malloc(sizeof(Context));
+	
 	ctx->done         = false;
 	ctx->player       = NULL;
 	ctx->droid        = NULL;
