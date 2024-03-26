@@ -186,16 +186,16 @@ room_render(const Room *room)
 				// clang-format off
 				if (room_is_wall(room, x - 1, y)
 				 && room_is_wall(room, x + 1, y))
-				// clang-format on
 				{
 					ch = D_H;
 				} else {
 					ch = D_V;
 				}
 				break;
+				// clang-format on
 
 			case T_WALL:
-			{
+				// clang-format off
 				if (CHK_PATTERN(0x815A) || CHK_PATTERN(0x245A)) {
 					ch = W_X;
 				} else if (CHK_PATTERN(0x8258) || CHK_PATTERN(0x2258)) {
@@ -218,21 +218,19 @@ room_render(const Room *room)
 					ch = W_NE;
 				} else if (CHK_PATTERN(0x0A50) || CHK_PATTERN(0x8050)) {
 					ch = W_SE;
-				// clang-format off
 				} else if (CHK_PATTERN(0x4010) || CHK_PATTERN(0x4008)
 				        || CHK_PATTERN(0x0210) || CHK_PATTERN(0x0208))
 				{
 					ch = W_H;
 				} else if (CHK_PATTERN(0x1040) || CHK_PATTERN(0x1002)
 				        || CHK_PATTERN(0x0840) || CHK_PATTERN(0x0802))
-				// clang-format on
 				{
 					ch = W_V;
 				} else {
 					ch = WALLS[rand() % 11]; // FIXME pick one and persist
 				}
 				break;
-			}
+				// clang-format on
 
 			default:
 				ch = '\0';

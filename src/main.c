@@ -435,7 +435,7 @@ main(int argc, char *argv[])
 	   */
 
 	ctx = malloc(sizeof(Context));
-	
+
 	ctx->done         = false;
 	ctx->player       = NULL;
 	ctx->droid        = NULL;
