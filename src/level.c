@@ -137,7 +137,7 @@ room_pattern(const Room *room, int pat, int x, int y)
 	// clang-format off
 	return CHK(7, x - 1, y - 1) && CHK(6, x, y - 1) && CHK(5, x + 1, y - 1)
 	    && CHK(4, x - 1, y    )                     && CHK(3, x + 1, y    )
-		&& CHK(2, x - 1, y + 1) && CHK(1, x, y + 1) && CHK(0, x + 1, y + 1);
+	    && CHK(2, x - 1, y + 1) && CHK(1, x, y + 1) && CHK(0, x + 1, y + 1);
 	// clang-format on
 }
 
