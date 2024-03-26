@@ -7,7 +7,6 @@
 #include "level.h"
 #include "main.h"
 #include "misc.h"
-#include "ncurses.h"
 
 static Cell   **map = NULL;
 static Context *ctx = NULL;
@@ -149,55 +148,46 @@ ch_move_towards(Character *c, Character *to)
 	ch_move(c, dx, dy, false);
 }
 
-typedef struct {
-	size_t x1;
-	size_t y1;
-	size_t x2;
-	size_t y2;
-} Rect;
-
 void
-render_region(const Rect *r)
-{
-	for (int j = r->y1; j <= r->y2; ++j) {
-		for (int i = r->x1; i <= r->x2; ++i) {
-			cell_render(i, j);
-		}
-	}
-}
-
-void
-ctx_render_enqueued()
+ctx_render_enqueued_snapshots()
 {
 	Node *i;
 	while (i = ctx->render_queue) {
-		Rect *rect = i->value;
-		render_region(rect);
-		free(rect);
+		Snap *snap = i->value;
+		mvadd_wchstr(snap->y, snap->x, snap->text);
+		free(snap->text);
+		snap->text = NULL;
+		free(snap);
+
 		ctx->render_queue = i->next;
+
+		i->value = NULL;
+		i->next  = NULL;
 		free(i);
 	}
 }
 
 void
-ctx_enqueue_rendering(size_t x1, size_t y1, size_t x2, size_t y2)
+ctx_enqueue_region_snapshot(size_t x, size_t y, size_t L)
 {
-	Rect *rect = malloc(sizeof(Rect));
+	cchar_t *prev = calloc(L + 1, sizeof(cchar_t));
+	mvin_wchnstr(y, x, prev, L);
 
-	rect->x1 = x1;
-	rect->y1 = y1;
-	rect->x2 = x2;
-	rect->y2 = y2;
+	Snap *snap = malloc(sizeof(Snap));
 
-	ctx->render_queue = l_append(ctx->render_queue, rect);
+	snap->x    = x;
+	snap->y    = y;
+	snap->text = prev;
+
+	ctx->render_queue = l_prepend(ctx->render_queue, snap);
 }
 
 void
 render_text(size_t x, size_t y, const char *str)
 {
-	mvprintw(y, x, str);
+	ctx_enqueue_region_snapshot(x, y, strlen(str));
+	mvprintw(y, x, str); // FIXME wraps on edges
 	refresh();
-	ctx_enqueue_rendering(x, y, x + strlen(str), y);
 }
 
 static void
@@ -279,7 +269,7 @@ ch_attack_side(Character *c, int dx, int dy)
 				refresh();
 
 				SLEEP();
-				ctx_render_enqueued();
+				ctx_render_enqueued_snapshots();
 				refresh();
 			}
 			ch_render(t);
@@ -337,7 +327,7 @@ do_attack(Character *player)
 	// FIXME out of screen
 	render_text(px + 1, py - 1, "Where?");
 	int ch = getch();
-	ctx_render_enqueued();
+	ctx_render_enqueued_snapshots();
 
 	switch (ch) {
 	case 'h':
@@ -563,7 +553,7 @@ main(int argc, char *argv[])
 			break;
 		}
 
-		ctx_render_enqueued();
+		ctx_render_enqueued_snapshots();
 
 		if (droid->state != DEAD) {
 			move_droid();
