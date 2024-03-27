@@ -130,8 +130,9 @@ ch_move(Character *c, int dx, int dy, bool bypass_block)
 
 		ctx->current_room = t->room;
 
-		// FIXME dead corpse gets overriden
 		room_render(t->room);
+
+		ch_render(ctx->droid);
 	}
 
 	t->top = l_prepend(t->top, c);
