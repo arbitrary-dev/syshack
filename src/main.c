@@ -206,9 +206,13 @@ ch_render_text(const Character *ch, const char *str)
 	int ox = och->x;
 	int oy = och->y;
 
-	if (oy == y && ox >= x - 1 && ox <= x + L) {
-		x -= L + 1;
-		y += 2;
+	if (oy == y) {
+		if (ox == x - 1) {
+			y += 2;
+		}
+		if (ox >= x - 1 && ox <= x + L) {
+			x -= L + 1;
+		}
 	}
 
 	// Now check window boundaries
