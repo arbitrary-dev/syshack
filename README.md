@@ -37,7 +37,7 @@ $ build/bin/syshack
   - shift & merge more
   - stairs & ladders
 - [ ] Rendering
-  - text
+  - ~text~
   [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)
   - several objects per tile
 - [ ] NPC interactions

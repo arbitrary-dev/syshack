@@ -191,6 +191,42 @@ render_text(size_t x, size_t y, const char *str)
 	refresh();
 }
 
+void
+ch_render_text(const Character *ch, const char *str)
+{
+	// By default text rendered in upper right corner
+	int x = ch->x + 1;
+	int y = ch->y - 1;
+
+	size_t L = strlen(str);
+
+	// Now check for other characters around
+	const Character *och = (ch == ctx->player) ? ctx->droid : ctx->player;
+
+	int ox = och->x;
+	int oy = och->y;
+
+	if (oy == y && ox >= x - 1 && ox <= x + L) {
+		x -= L + 1;
+		y += 2;
+	}
+
+	// Now check window boundaries
+	if (y < 0) {
+		y = ch->y + 1;
+	} else if (y >= LINES) {
+		y = ch->y - 1;
+	}
+
+	if (x < 0) {
+		x = ch->x + 1;
+	} else if (x + L > COLS) {
+		x = ch->x - L;
+	}
+
+	render_text(x, y, str);
+}
+
 static void
 ch_attack_side(Character *c, int dx, int dy)
 {
@@ -205,7 +241,7 @@ ch_attack_side(Character *c, int dx, int dy)
 
 	if (!o) {
 		if (map[ax][ay].is_wall) {
-			render_text(c->x + 1, c->y - 1, "The wall?");
+			ch_render_text(c, "The wall?");
 			SLEEP();
 			SLEEP();
 		}
@@ -232,7 +268,7 @@ ch_attack_side(Character *c, int dx, int dy)
 				if (is_player) {
 					ch_render(t);
 					attron(COLOR_PAIR(2));
-					render_text(t->x + 1, t->y - 1, "WASTED!");
+					ch_render_text(t, "WASTED!");
 					SLEEP();
 					SLEEP();
 					SLEEP();
@@ -249,7 +285,7 @@ ch_attack_side(Character *c, int dx, int dy)
 				char str[4];
 				sprintf(str, "-%d", damage);
 				attron(COLOR_PAIR(2));
-				render_text(t->x + 1, t->y - 1, str);
+				ch_render_text(t, str);
 				attroff(COLOR_PAIR(2));
 
 				SMALL_SLEEP();
@@ -275,7 +311,7 @@ ch_attack_side(Character *c, int dx, int dy)
 			}
 			ch_render(t);
 		} else {
-			render_text(c->x + 1, c->y - 1, "Miss!");
+			ch_render_text(c, "Miss!");
 			SLEEP();
 		}
 	} break;
@@ -322,11 +358,7 @@ move_droid()
 void
 do_attack(Character *player)
 {
-	int px = player->x;
-	int py = player->y;
-
-	// FIXME out of screen
-	render_text(px + 1, py - 1, "Where?");
+	ch_render_text(player, "Where?");
 	int ch = getch();
 	ctx_render_enqueued_snapshots();
 
@@ -368,7 +400,7 @@ do_attack(Character *player)
 		break;
 
 	default:
-		render_text(px + 1, py - 1, "What?!");
+		ch_render_text(player, "What?!");
 		SLEEP();
 	}
 }
