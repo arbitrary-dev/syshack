@@ -178,7 +178,7 @@ room_render(const Room *room)
 			}
 			render_row(roomx, roomy + j, roomw, start, middle, end);
 		}
-		mvprintw(roomy + 1, roomx + 1, "%dx%d", roomw, roomh);
+		// mvprintw(roomy + 1, roomx + 1, "%dx%d", roomw, roomh);
 	} else {
 		for (int i = 0; i < roomw * roomh; ++i) {
 			int  x = roomx + i % roomw;
