@@ -43,7 +43,18 @@ room_set_tile(Room *room, int x, int y, Tile tile)
 	if (x < roomx || x >= roomx + roomw || y < roomy || y >= roomy + roomh) {
 		return;
 	} else if (!room->tiles) {
-		room->tiles = calloc(roomw * roomh, sizeof(*room->tiles));
+		room->tiles = calloc(roomw * roomh, sizeof(Tile));
+		for (int i = 0; i < roomw * roomh; ++i) {
+			int nx = roomx + i % roomw;
+			int ny = roomy + i / roomw;
+			// clang-format off
+			room->tiles[i / roomw * roomw + i % roomw]
+				= nx > roomx && nx < roomx + roomw - 1
+				  && ny > roomy && ny < roomy + roomh - 1
+					? T_FLOOR
+					: T_WALL;
+			// clang-format on
+		}
 	}
 	room->tiles[(y - roomy) * roomw + x - roomx] = tile;
 }
