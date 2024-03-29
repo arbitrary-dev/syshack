@@ -308,7 +308,7 @@ merge_rooms(Level *lvl, Room *r1, Room *r2)
 	room_render(r2);
 	attroff(COLOR_PAIR(2));
 	refresh();
-	// SMALL_SLEEP();
+	SMALL_SLEEP();
 
 	ROOM(r1);
 	ROOM(r2);
@@ -373,7 +373,7 @@ merge_rooms(Level *lvl, Room *r1, Room *r2)
 	// mvprintw(y+1, x+1, "%dx%d w%d h%d", x, y, w, h);
 	attroff(COLOR_PAIR(3));
 	refresh();
-	// SMALL_SLEEP();
+	SMALL_SLEEP();
 
 	lvl_destroy_room(lvl, r2);
 	lvl->rooms_num -= 1;
@@ -411,7 +411,7 @@ lvl_build()
 		mvprintw(0, 0, "Rooms created: %d", lvl->rooms_num);
 		room_render(r);
 		refresh();
-		// SMALL_SLEEP();
+		SMALL_SLEEP();
 	}
 
 	// Merge close ones
@@ -569,7 +569,9 @@ lvl_build()
 					r->connected  = TRUE;
 					r2->connected = TRUE;
 
+					attron(COLOR_PAIR(3));
 					room_render(r2);
+					attroff(A_COLOR);
 				}
 			}
 
@@ -580,7 +582,17 @@ lvl_build()
 				r->y += oy;
 			}
 
+			if (r->connected) {
+				attron(COLOR_PAIR(3));
+			} else {
+				attron(COLOR_PAIR(2));
+			}
 			room_render(r);
+			attroff(A_COLOR);
+			if (r->connected && shift) {
+				refresh();
+				SMALL_SLEEP();
+			}
 		} while (++shift < 49 && !r->connected);
 	}
 
