@@ -1,7 +1,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-#include <stdbool.h>
+#include "ncurses.h"
 
 // Walls
 

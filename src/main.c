@@ -37,9 +37,9 @@ bool
 is_blocked(const Cell *c)
 {
 	if (c->is_wall) {
-		return true;
+		return TRUE;
 	} else if (!c->top) {
-		return false;
+		return FALSE;
 	}
 
 	Object *o = c->top->value;
@@ -48,7 +48,7 @@ is_blocked(const Cell *c)
 	case CHARACTER:
 		return ((Character *) o)->state != DEAD;
 	default:
-		return false;
+		return FALSE;
 	}
 }
 
@@ -146,7 +146,7 @@ ch_move_towards(Character *c, Character *to)
 {
 	int dx = (to->x - c->x > 0) - (to->x - c->x < 0);
 	int dy = (to->y - c->y > 0) - (to->y - c->y < 0);
-	ch_move(c, dx, dy, false);
+	ch_move(c, dx, dy, FALSE);
 }
 
 void
@@ -355,7 +355,7 @@ move_droid()
 		break;
 	}
 	default:
-		ch_move(d, rand() % 3 - 1, rand() % 3 - 1, false);
+		ch_move(d, rand() % 3 - 1, rand() % 3 - 1, FALSE);
 	}
 }
 
@@ -463,7 +463,7 @@ main(int argc, char *argv[])
 
 	ctx = malloc(sizeof(Context));
 
-	ctx->done         = false;
+	ctx->done         = FALSE;
 	ctx->player       = NULL;
 	ctx->droid        = NULL;
 	ctx->current_room = NULL;
@@ -473,7 +473,7 @@ main(int argc, char *argv[])
 	for (int i = 0; i < COLS; ++i) {
 		map[i] = calloc(LINES, sizeof(Cell));
 		for (int j = 0; j < LINES; ++j) {
-			map[i][j] = (Cell) { false, NULL, NULL };
+			map[i][j] = (Cell) { FALSE, NULL, NULL };
 		}
 	}
 
@@ -487,7 +487,7 @@ main(int argc, char *argv[])
 			for (int y = ry; y < ry + rh; ++y) {
 				assert(x >= 0 && y >= 0 && x < COLS && y < LINES);
 				if (room_is_wall(r, x, y)) {
-					map[x][y].is_wall = true;
+					map[x][y].is_wall = TRUE;
 				} else if (room_is_floor(r, x, y)) {
 					if (is_last_room || rand() % 6 == 0) {
 						if ((is_last_room || rand() % 2) && !player) {
@@ -566,19 +566,19 @@ main(int argc, char *argv[])
 			break;
 
 		case 'y':
-			ch_move(player, -1, -1, false);
+			ch_move(player, -1, -1, FALSE);
 			break;
 
 		case 'u':
-			ch_move(player, 1, -1, false);
+			ch_move(player, 1, -1, FALSE);
 			break;
 
 		case 'b':
-			ch_move(player, -1, 1, false);
+			ch_move(player, -1, 1, FALSE);
 			break;
 
 		case 'n':
-			ch_move(player, 1, 1, false);
+			ch_move(player, 1, 1, FALSE);
 			break;
 
 		case 'a':

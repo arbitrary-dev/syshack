@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "level.h"
-#include "ncurses.h"
 
 static Room *
 mk_room_rect(int x, int y, int w, int h)
@@ -124,11 +123,11 @@ cell_pattern(const Room *room, int i, int pat, int x, int y)
 {
 	Tile t = room_get_tile(room, x, y);
 	if (pat & (1 << i) && !(t & (T_WALL | T_DOOR))) {
-		return false;
+		return FALSE;
 	} else if (pat & (1 << i + 8) && !(t & T_FLOOR)) {
-		return false;
+		return FALSE;
 	}
-	return true;
+	return TRUE;
 }
 
 #define CHK(i, x, y) cell_pattern(room, i, pat, x, y)

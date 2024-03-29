@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #include "character.h"
 #include "level.h"
 #include "llist.h"
