@@ -13,7 +13,8 @@ mk_room_rect(int x, int y, int w, int h)
 	r->w = w;
 	r->h = h;
 
-	r->is_rect = TRUE;
+	r->is_rect   = TRUE;
+	r->connected = FALSE;
 
 	return r;
 }
@@ -254,6 +255,29 @@ room_render(const Room *room)
 	}
 }
 
+void
+room_clean(const Room *room)
+{
+	ROOM(room);
+	if (!room->tiles) {
+		for (int i = 0; i < roomw; ++i) {
+			for (int j = 0; j < roomh; ++j) {
+				mvaddch(roomy + j, roomx + i, ' ');
+			}
+		}
+	} else {
+		for (int i = 0; i < roomw * roomh; ++i) {
+			int  x = roomx + i % roomw;
+			int  y = roomy + i / roomw;
+			Tile t = room_get_tile(room, x, y);
+
+			if (t) {
+				mvaddch(y, x, ' ');
+			}
+		}
+	}
+}
+
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -441,52 +465,123 @@ lvl_build()
 	}
 	mvprintw(1, 0, "Rooms after merge: %d", lvl->rooms_num);
 
+	// Magic offsets matrices
+	// clang-format off
+	int omx[49]
+		= { 0,  0,  1,  1,  1,  0, -1, -1, -1,  0,  1,  2,  2,  2,  2,  2,  1,
+		    0, -1, -2, -2, -2, -2, -2, -1,  0,  1,  2,  3,  3,  3,  3,  3,  3,
+		    3,  2,  1,  0, -1, -2, -3, -3, -3, -3, -3, -3, -3, -2, -1 };
+	int omy[49]
+		= { 0, -1, -1,  0,  1,  1,  1,  0, -1, -2, -2, -2, -1,  0,  1,  2,  2,
+		    2,  2,  2,  1,  0, -1, -2, -2, -3, -3, -3, -3, -2, -1,  0,  1,  2,
+		    3,  3,  3,  3,  3,  3,  3,  2,  1,  0, -1, -2, -3, -3, -3 };
+	// clang-format on
+
 	// Connect rooms
 	for (Room *r = lvl->rooms; r; r = r->next) {
+		int shift = 0;
 		ROOM(r);
-		for (int i = 0; i < rw * rh; ++i) {
-			int x = rx + i % rw;
-			int y = ry + i / rw;
-			if (!room_is_wall(r, x, y)) {
-				continue;
-			}
-			Room *r2;
-			// TODO move rooms around to maximize doorable perimiter
-			// clang-format off
-			if ((
-				room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
-				&& ((
-					room_is_floor(r, x + 1, y)
-					&& (r2 = get_room(lvl, x - 1, y)) && r != r2
-					&& room_is_floor(r2, x - 1, y)
-				) || (
-					room_is_floor(r, x - 1, y)
-					&& (r2 = get_room(lvl, x + 1, y)) && r != r2
-					&& room_is_floor(r2, x + 1, y)
-				))
-			) || (
-				room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
-				&& ((
-					room_is_floor(r, x, y + 1)
-					&& (r2 = get_room(lvl, x, y - 1)) && r != r2
-					&& room_is_floor(r2, x, y - 1)
-				) || (
-					room_is_floor(r, x, y - 1)
-					&& (r2 = get_room(lvl, x, y + 1)) && r != r2
-					&& room_is_floor(r2, x, y + 1)
-				))
-			))
-			// clang-format on
-			{
-				// TODO remember these in an array and then pick up one
-				// or two (on a different wall) randomly.
-				room_set_tile(r, x, y, T_DOOR);
-				room_set_tile(r2, x, y, T_DOOR);
 
-				room_render(r2);
+		do {
+			bool invalid_shift = FALSE;
+
+			int ox = omx[shift];
+			int oy = omy[shift];
+
+			if (shift) {
+				// Check if no floor tile in r2, otherwise invalid shift
+				for (int i = 0; i < rw * rh; ++i) {
+					int x = rx + i % rw;
+					int y = ry + i / rw;
+					if (room_get_tile(r, x, y) == T_EMPTY) {
+						continue;
+					}
+
+					// Shifted coordinates for a second room
+					int sx = x + ox;
+					int sy = y + oy;
+
+					if (sx < 0 || sx >= COLS || sy < 0 || sy >= LINES
+					    || rx + ox < 0 || rx + rw - 1 + ox >= COLS
+					    || ry + oy < 0 || ry + rh - 1 + oy >= LINES)
+					{
+						invalid_shift = TRUE;
+						break;
+					}
+
+					Room *r2 = get_room(lvl, sx, sy);
+
+					if (r2 && r != r2 && room_is_floor(r2, sx, sy)) {
+						invalid_shift = TRUE;
+						break;
+					}
+				}
+
+				if (invalid_shift) {
+					continue;
+				}
 			}
-		}
-		room_render(r);
+
+			for (int i = 0; i < rw * rh; ++i) {
+				int x = rx + i % rw;
+				int y = ry + i / rw;
+				if (!room_is_wall(r, x, y)) {
+					continue;
+				}
+
+				// Shifted coordinates for a second room
+				int sx = x + ox;
+				int sy = y + oy;
+
+				Room *r2;
+
+				// clang-format off
+				if ((
+					room_is_wall(r, x, y - 1) && room_is_wall(r, x, y + 1)
+					&& ((
+						room_is_floor(r, x + 1, y)
+						&& (r2 = get_room(lvl, sx - 1, sy)) && r != r2
+						&& room_is_floor(r2, sx - 1, sy)
+					) || (
+						room_is_floor(r, x - 1, y)
+						&& (r2 = get_room(lvl, sx + 1, sy)) && r != r2
+						&& room_is_floor(r2, sx + 1, sy)
+					))
+				) || (
+					room_is_wall(r, x - 1, y) && room_is_wall(r, x + 1, y)
+					&& ((
+						room_is_floor(r, x, y + 1)
+						&& (r2 = get_room(lvl, sx, sy - 1)) && r != r2
+						&& room_is_floor(r2, sx, sy - 1)
+					) || (
+						room_is_floor(r, x, y - 1)
+						&& (r2 = get_room(lvl, sx, sy + 1)) && r != r2
+						&& room_is_floor(r2, sx, sy + 1)
+					))
+				))
+				// clang-format on
+				{
+					// TODO remember these in an array and then pick up one
+					// or two (on a different wall) randomly.
+					room_set_tile(r, x, y, T_DOOR);
+					room_set_tile(r2, sx, sy, T_DOOR);
+
+					r->connected  = TRUE;
+					r2->connected = TRUE;
+
+					room_render(r2);
+				}
+			}
+
+			// Shift the room
+			if (r->connected && shift) {
+				room_clean(r);
+				r->x += ox;
+				r->y += oy;
+			}
+
+			room_render(r);
+		} while (++shift < 49 && !r->connected);
 	}
 
 	refresh();

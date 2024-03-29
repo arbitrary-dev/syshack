@@ -47,6 +47,7 @@ typedef struct room {
 	int h;
 
 	bool  is_rect;
+	bool  connected;
 	Tile *tiles;
 	// TODO walls
 } Room;

@@ -34,8 +34,8 @@ $ build/bin/syshack
 - [ ] Level generation
   - ~rooms merging~
   - ~connect rooms with doors~
-  - shift & merge more
-  - stairs & ladders
+  - ~shift & connect more~
+  - stairs
 - [ ] Rendering
   - ~text~
   [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)
