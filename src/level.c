@@ -187,6 +187,7 @@ room_render(const Room *room)
 			Tile t = room_get_tile(room, x, y);
 
 			wchar_t ch;
+			int     attrs = A_NORMAL;
 
 			switch (t) {
 			case T_FLOOR:
@@ -195,6 +196,7 @@ room_render(const Room *room)
 
 			case T_DOOR:
 				// clang-format off
+				attrs |= A_BOLD;
 				if (room_is_wall(room, x - 1, y)
 				 && room_is_wall(room, x + 1, y))
 				{
@@ -248,7 +250,7 @@ room_render(const Room *room)
 			}
 
 			if (ch) {
-				cchar_t cch = { A_NORMAL, { ch, L'\0' } };
+				cchar_t cch = { attrs, { ch, L'\0' } };
 				mvadd_wch(roomy + i / roomw, roomx + i % roomw, &cch);
 			}
 		}
