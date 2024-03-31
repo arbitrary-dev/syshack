@@ -25,10 +25,11 @@ init(void)
 	use_default_colors();
 	start_color();
 
+	use_default_colors(); // allows for -1
 	init_pair(1, COLOR_WHITE, COLOR_RED);
-	init_pair(2, COLOR_RED, COLOR_BLACK);
-	init_pair(3, COLOR_GREEN, COLOR_BLACK);
-	init_pair(4, COLOR_BLACK, COLOR_BLACK);
+	init_pair(2, COLOR_RED, -1);
+	init_pair(3, COLOR_GREEN, -1);
+	init_pair(4, COLOR_BLACK, -1);
 
 	srand(time(NULL));
 }
