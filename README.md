@@ -1,7 +1,7 @@
 SysHack
 =======
 
-[![v0.2](https://img.shields.io/badge/dev-v0.2-lightgray.svg)](../../tree/v0.2)
+[![v0.2](https://img.shields.io/badge/dev-v0.2-brightgreen.svg)](../../tree/v0.2)
 
 Something like System Shock, but in NCurses.
 
@@ -29,21 +29,20 @@ $ build/bin/syshack
 - [x] Walking character
 - [x] Walking droid
 - [x] Ebites!
-  [![v0.1](https://img.shields.io/badge/-v0.1-brightgreen.svg)](../../tree/v0.1)
 - [x] Collision detection
 - [ ] Level generation
   - ~rooms merging~
   - ~connect rooms with doors~
   - ~shift & connect more~
   - stairs
+    ![v0.3](https://img.shields.io/badge/-v0.3-lightgray.svg)
 - [ ] Rendering
   - ~text~
-  [![v0.2](https://img.shields.io/badge/-v0.2-lightgray.svg)](../../tree/v0.2)
   - several objects per tile
 - [ ] NPC interactions
   - dialogs
-  [![v0.3](https://img.shields.io/badge/-v0.3-lightgray.svg)](../../tree/v0.3)
+    ![v0.4](https://img.shields.io/badge/-v0.4-lightgray.svg)
 - [ ] Field of view
 - [ ] Difficulty levels
-  [![v1.0](https://img.shields.io/badge/-v1.0-lightgray.svg)](../../tree/v1.0)
+      ![v1.0](https://img.shields.io/badge/-v1.0-lightgray.svg)
 - [ ] Unit tests with [Check](https://github.com/libcheck/check)
